@@ -1,0 +1,10 @@
+[package]
+name = "pipa"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+unicode-segmentation = "1.12.0"

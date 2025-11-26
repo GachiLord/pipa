@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>This is a title </title>
+  </head>
+  <body>
+    <div>
+        \{\{
+        <p>{{ name }}</p>
+        <p>{{ sirname }}</p>
+        {{
+          @add_hello "Hello: \$_\$ => @..? \"$(arg)\" $(_)" # there is escaping and comments
+          @const_msg "This is a function that returns a constant value"
+
+          69 "\n\t"
+
+          name "\n\t\n\t"
+
+          ARGS[0:69] | "<h1>$(_item_)$(_index_)<h2>" | ?add_hello | "$(_)\n\t"
+
+          "\n\t"
+
+          ARGS[:] | "$(_index_): $(_item_)\n\t"
+
+          "\n\t"
+
+          ?const_msg "\n\t"
+
+          "<h1>that's the $(name) rule<h2>\n\t" | "fuck$(_)this$(_)"
+        }}
+    </div>
+  </body>
+</html>

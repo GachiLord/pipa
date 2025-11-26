@@ -3,8 +3,8 @@ use std::collections::BTreeMap;
 use std::io::Write;
 use crate::ir::{Op, is_name_reserved};
 
-type StringVars = BTreeMap<Box<str>, Box<str>>;
-type ArrayVars = BTreeMap<Box<str>, Vec<Box<str>>>;
+pub type StringVars = BTreeMap<Box<str>, Box<str>>;
+pub type ArrayVars = BTreeMap<Box<str>, Vec<Box<str>>>;
 
 
 #[derive(Debug, PartialEq, Copy, Clone)]

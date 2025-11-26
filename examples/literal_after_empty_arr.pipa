@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>This is a hello page</title>
+  </head>
+  <body>
+    <div>
+        <p>Hello,</p>
+        <p>{{ name }}</p>
+        <p>{{ sirname }}</p>
+        <p>
+        {{
+          "Hello, $(name) $(sirname)"
+        }}
+        <p>This page is generated using the pipa language</p>
+        <ul>
+          {{
+            LIST[:] | "$(_index_): $(_item_)" | "<li>$(_)</li>"
+          }}
+        </ul>
+    </div>
+  </body>
+</html>

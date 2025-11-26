@@ -44,7 +44,8 @@ fn test_file(filename: &str) {
     let mut vm = Vm::new(vars, arrays);
 
     match vm.run(&mut handle, &ir) {
-        Ok(_) => {},
+        Ok(_) => {
+        },
         Err(e) => {
             dump_ir(&ir);
             vm.dump_state();
@@ -72,4 +73,9 @@ fn empty() {
 #[test]
 fn empty_code() {
     test_file("examples/empty_code.pipa");
+}
+
+#[test]
+fn literal_after_empty_arr() {
+    test_file("examples/literal_after_empty_arr.pipa");
 }

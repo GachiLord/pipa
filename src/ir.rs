@@ -276,7 +276,7 @@ pub fn gen_ir(code: &str, mut ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
                         array_start = None;
 
                         if let Op::CmpArrayEmptyJmp { op_index, .. } = &mut ops[op_i] {
-                            *op_index = len + 2;
+                            *op_index = len + 1;
                         } else {
                             unreachable!();
                         }

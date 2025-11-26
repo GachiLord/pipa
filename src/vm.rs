@@ -71,8 +71,14 @@ impl Vm {
 
     pub fn run(&mut self, w: &mut impl Write, program: &[Op]) -> Result<(), VmError> {
         loop {
-            self.step(w, program)?;
+            match self.step(w, program) {
+                Err(VmError::EndOfProgram) => break,
+                Err(e) => return Err(e),
+                Ok(_) => {}
+            }
         }
+
+        Ok(())
     }
 
     pub fn step(&mut self, w: &mut impl Write, program: &[Op]) -> Result<(), VmError> {

@@ -1,14 +1,13 @@
-mod syntax;
-mod ir;
-mod vm;
-mod error;
+pub mod syntax;
+pub mod ir;
+pub mod vm;
+pub mod error;
 
 use std::collections::BTreeMap;
 use std::fs::read_to_string;
-pub use ir::{gen_ir, dump_ir};
-pub use error::CompileError;
-pub use syntax::ast;
-pub use vm::{Vm, VmError};
+use ir::{gen_ir, dump_ir};
+use syntax::ast;
+use vm::{Vm, VmError};
 
 fn test_file(filename: &str) {
     let stderr = std::io::stderr();

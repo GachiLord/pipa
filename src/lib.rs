@@ -79,3 +79,20 @@ fn empty_code() {
 fn literal_after_empty_arr() {
     test_file("examples/literal_after_empty_arr.pipa");
 }
+
+#[test]
+fn range_strings() {
+    test_file("examples/range_strings.pipa");
+}
+
+#[test]
+#[should_panic]
+fn undefined_scope() {
+    test_file("examples/undefined_scope.pipa");
+}
+
+#[test]
+#[should_panic]
+fn undefined_scope_with_range() {
+    test_file("examples/undefined_scope_with_range.pipa");
+}

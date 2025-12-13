@@ -194,8 +194,14 @@ pub fn gen_ir(code: &str, mut ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
                 }
             },
             InnerNode::Name { .. } => {
-                let name = node.as_str(code).into();
+                let name: Box<str> = node.as_str(code).into();
+
+                if !scope.contains(name.as_ref()) && is_name_reserved(&name) {
+                    return Err(CompileError::new_undefined_var(node.first_char, name.into()));
+                }
+
                 ops.push(Op::PutName { name, start: None, end: None });
+
 
                 if is_node_pipe(&mut ast, i + 1) {
                     expect_string(&ast, i + 2)?;
@@ -227,6 +233,10 @@ pub fn gen_ir(code: &str, mut ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
                     i += 1;
                 } else {
                     ops.push(Op::PutName { name: name.clone(), start, end });
+
+                    if !scope.contains(name.as_ref()) && is_name_reserved(&name) {
+                        return Err(CompileError::new_undefined_var(node.first_char, name.to_string()));
+                    }
 
                     if is_node_pipe(&mut ast, i + 1) {
                         expect_string(&ast, i + 2)?;

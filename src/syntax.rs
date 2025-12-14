@@ -240,7 +240,7 @@ fn lex(code: &str) -> Result<Vec<Token>, CompileError> {
                         (false, "{") => {
                             return Err(CompileError::new_syntax(ni, &[TokenType::CodeEnd]));
                         },
-                        (_, "}") => {
+                        (false, "}") => {
                             end = ni;
                             break;
                         },

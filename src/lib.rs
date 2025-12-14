@@ -96,3 +96,9 @@ fn undefined_scope() {
 fn undefined_scope_with_range() {
     test_file("examples/undefined_scope_with_range.pipa");
 }
+
+
+#[test]
+fn code_block_symbols_in_string() {
+    test_file("examples/code_block_symbols_in_string.pipa");
+}

@@ -292,14 +292,22 @@ fn lex_code(first_char: usize, code: &str, tokens: &mut Vec<Token>) -> Result<()
             },
             (false, "\"") => {
                 let mut end = i;
+                let mut found_boundary = false;
                 
                 while let Some((is_escaping, ni, tn)) = iter.next() {
                     end = ni;
 
                     match (is_escaping, tn) {
-                        (false, "\"") => break,
+                        (false, "\"") => {
+                            found_boundary = true;
+                            break;
+                        },
                         (_, &_) => {}
                     }
+                }
+
+                if !found_boundary {
+                    return Err(CompileError::new_syntax(end, &[TokenType::Quote]));
                 }
 
                 expect_symbol(&mut iter, &[TokenType::Space, TokenType::NewLine], false)?;

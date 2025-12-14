@@ -283,7 +283,7 @@ fn lex_code(first_char: usize, code: &str, tokens: &mut Vec<Token>) -> Result<()
     while let Some((is_escaping, i, t)) = iter.next() {
         match (is_escaping, t) {
             (false, "@") => {
-                let end = find_boundary(i, &mut iter, TokenType::Literal, &[TokenType::Space])?;
+                let end = find_boundary(i, &mut iter, TokenType::Literal, &[TokenType::Space, TokenType::NewLine])?;
                 tokens.push(Token::new(i, end, TokenType::MacroDef));
             },
             (false, "?") => {

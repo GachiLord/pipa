@@ -322,9 +322,9 @@ pub fn gen_ir(code: &str, mut ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
 }
 
 pub fn dump_ir(w: &mut impl Write, ir: &Vec<Op>) -> std::io::Result<()> {
-    write!(w, "IR:")?;
+    write!(w, "IR:\n")?;
     for i in 0..ir.len() {
-        write!(w, "{}: {}", i, &ir[i])?;
+        write!(w, "{}: {}\n", i, &ir[i])?;
     }
     Ok(())
 }

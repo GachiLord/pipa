@@ -108,3 +108,8 @@ fn broken_string() {
 fn code_block_symbols_in_string() {
     test_file("examples/code_block_symbols_in_string.pipa");
 }
+
+#[test]
+fn values_at_end_of_code_block() {
+    test_file("examples/values_at_end_of_code_block.pipa");
+}

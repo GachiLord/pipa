@@ -347,7 +347,7 @@ fn lex_code(first_char: usize, code: &str, tokens: &mut Vec<Token>) -> Result<()
                     None => return Err(CompileError::new_name(i))
                 }
 
-                if &code[end - first_char..end - first_char + 1] == "[" {
+                if end - first_char + 1 < code.len() && &code[end - first_char..end - first_char + 1] == "[" {
                     let nend = find_symbol(&mut iter, &[TokenType::RangeEnd])?;
                     tokens.push(Token::new(end, nend + 1, TokenType::Range));
                 }
@@ -409,7 +409,7 @@ fn find_boundary<'a>(first_char: usize, iter: &mut impl Iterator<Item = (bool, u
 {
     let mut c = first_char;
 
-    'main_loop: while let Some((is_escaping, i, t)) = iter.next() {
+    while let Some((is_escaping, i, t)) = iter.next() {
         c = i;
         let t: TokenType = if is_escaping { TokenType::Literal } else { t.into() };
 
@@ -417,7 +417,7 @@ fn find_boundary<'a>(first_char: usize, iter: &mut impl Iterator<Item = (bool, u
 
             for term in terminator {
                 if t == *term {
-                    break 'main_loop;
+                    return Ok(c);
                 }
             }
 
@@ -425,7 +425,7 @@ fn find_boundary<'a>(first_char: usize, iter: &mut impl Iterator<Item = (bool, u
         }
     }
 
-    Ok(c)
+    Ok(c + 1)
 }
 
 fn parse_string(first_char: usize, end_char: usize, string: &str) -> Result<Node, CompileError> {

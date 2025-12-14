@@ -566,9 +566,9 @@ pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
             InnerNode::MacroExp => {
                 let name = &n.as_str(code)[1..];
 
-                match macro_table.remove(name) {
+                match macro_table.get(&name) {
                     Some(n) => {
-                        expanded.extend(n);
+                        expanded.extend(n.clone());
                     },
                     None => {
                         return Err(CompileError::new_undefined_macro(n.first_char, name.to_string()));

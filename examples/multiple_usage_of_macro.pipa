@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>This is a title</title>
+  </head>
+  <body>
+    <div>
+        <p>
+        {{
+          @print "$(_item_)\n\t"
+
+          ARGS[:] | ?print
+          ARGS[:] | ?print
+        }}
+        </p>
+    </div>
+  </body>
+</html>

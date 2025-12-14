@@ -113,3 +113,8 @@ fn code_block_symbols_in_string() {
 fn values_at_end_of_code_block() {
     test_file("examples/values_at_end_of_code_block.pipa");
 }
+
+#[test]
+fn multiple_usage_of_macro() {
+    test_file("examples/multiple_usage_of_macro.pipa");
+}

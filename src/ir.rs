@@ -1,5 +1,6 @@
 use std::fmt;
 use std::collections::{HashSet};
+use std::io::Write;
 use crate::syntax::{Node, TokenType, InnerNode};
 use crate::error::CompileError;
 
@@ -320,8 +321,10 @@ pub fn gen_ir(code: &str, mut ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
     Ok(ops)
 }
 
-pub fn dump_ir(ir: &Vec<Op>) {
+pub fn dump_ir(w: &mut impl Write, ir: &Vec<Op>) -> std::io::Result<()> {
+    write!(w, "IR:")?;
     for i in 0..ir.len() {
-        println!("{}: {}", i, &ir[i]);
+        write!(w, "{}: {}", i, &ir[i])?;
     }
+    Ok(())
 }

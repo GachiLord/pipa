@@ -47,8 +47,8 @@ fn test_file(filename: &str) {
         Ok(_) => {
         },
         Err(e) => {
-            dump_ir(&ir);
-            vm.dump_state();
+            dump_ir(&mut handle, &ir).unwrap();
+            vm.dump_state(&mut handle).unwrap();
             dbg!(e);
             assert_eq!(e, VmError::EndOfProgram);
         }

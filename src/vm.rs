@@ -45,8 +45,8 @@ impl Vm {
         self.scope.clear();
     }
 
-    pub fn dump_state(&self) {
-        println!("\nVM_STATE counter: {} pc: {} stack_len: {}\n", self.counter, self.pc, self.stack.len());
+    pub fn dump_state(&self, w: &mut impl Write) -> std::io::Result<()> {
+        write!(w, "VM_STATE counter: {} pc: {} stack_len: {}\n", self.counter, self.pc, self.stack.len())
     }
 
     fn get_string_var(&self, name: &str) -> Result<&str, VmError> {

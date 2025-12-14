@@ -5,9 +5,11 @@
   </head>
   <body>
     <div>
-        <p>{{
-          "\{\{ name \}\}"
-        }}</p>
+        <p>
+        {{
+          "\"Hello\{\}, $(name) $(sirname)\""
+        }}
+        </p>
     </div>
   </body>
 </html>

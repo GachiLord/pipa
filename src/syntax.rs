@@ -33,7 +33,7 @@ impl Into<TokenType> for &str {
     fn into(self) -> TokenType {
         match self {
             "\n" | "\r\n" => TokenType::NewLine,
-            " " => TokenType::Space,
+            " " | "\t" => TokenType::Space,
             "?" => TokenType::MacroExp,
             "{" => TokenType::CodeBegin,
             "}" => TokenType::CodeEnd,
@@ -323,7 +323,7 @@ fn lex_code(first_char: usize, code: &str, tokens: &mut Vec<Token>) -> Result<()
             (false, "\n") | (false, "\r\n") => {
                 tokens.push(Token::new(i, i + 1, TokenType::NewLine));
             }
-            (false, " ") => {},
+            (false, " ") | (false, "\t")  => {},
             (false, &_) => {
                 let end = find_boundary(i, &mut iter, TokenType::Literal, &[TokenType::Space, TokenType::NewLine, TokenType::RangeBegin])?;
                 tokens.push(Token::new(i, end, TokenType::Name));

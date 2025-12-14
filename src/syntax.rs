@@ -283,7 +283,7 @@ fn lex_code(first_char: usize, code: &str, tokens: &mut Vec<Token>) -> Result<()
     while let Some((is_escaping, i, t)) = iter.next() {
         match (is_escaping, t) {
             (false, "@") => {
-                let end = find_boundary(i, &mut iter, TokenType::Literal, &[TokenType::Space, TokenType::NewLine])?;
+                let end = find_boundary(i, &mut iter, TokenType::Literal, &[TokenType::Space])?;
                 tokens.push(Token::new(i, end, TokenType::MacroDef));
             },
             (false, "?") => {
@@ -310,9 +310,14 @@ fn lex_code(first_char: usize, code: &str, tokens: &mut Vec<Token>) -> Result<()
                     return Err(CompileError::new_syntax(end, &[TokenType::Quote]));
                 }
 
-                expect_symbol(&mut iter, &[TokenType::Space, TokenType::NewLine], false)?;
+                let symbol = expect_symbol(&mut iter, &[TokenType::Space, TokenType::NewLine], false)?;
 
                 tokens.push(Token::new(i, end + 1, TokenType::String));
+
+                if symbol == "\n" || symbol == "\r\n" {
+                    tokens.push(Token::new(end, end + 1, TokenType::NewLine));
+                }
+
             },
             (false, "#") => {
                 // don't care about the result cause it's a comment
@@ -553,7 +558,9 @@ pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
                         InnerNode::MacroExp | InnerNode::MacroDef => {
                             return Err(CompileError::new_nesetd_macro(n.first_char));
                         },
-                        _ => children.push(n),
+                        _ => {
+                            children.push(n);
+                        },
                     }
                 }
 

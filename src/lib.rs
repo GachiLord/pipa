@@ -118,3 +118,8 @@ fn values_at_end_of_code_block() {
 fn multiple_usage_of_macro() {
     test_file("examples/multiple_usage_of_macro.pipa");
 }
+
+#[test]
+fn multiple_macro_definition() {
+    test_file("examples/multiple_macro_definition.pipa");
+}

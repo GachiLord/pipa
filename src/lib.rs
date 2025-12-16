@@ -9,10 +9,9 @@ use ir::{gen_ir, dump_ir};
 use syntax::ast;
 use vm::{Vm, VmError};
 
-fn test_file(filename: &str) {
+fn test_str(filename: &str, code: &str) {
     let stderr = std::io::stderr();
     let mut handle = stderr.lock();
-    let code = read_to_string(filename).unwrap();
 
     // tokenize + lex
     let tokens = match ast(&code) {
@@ -53,6 +52,12 @@ fn test_file(filename: &str) {
             assert_eq!(e, VmError::EndOfProgram);
         }
     }
+}
+
+fn test_file(filename: &str) {
+    let code = read_to_string(filename).unwrap();
+
+    test_str(filename, &code);
 }
 
 #[test]
@@ -129,3 +134,7 @@ fn only_var() {
     test_file("examples/only_var.pipa");
 }
 
+#[test]
+fn without_a_newline() {
+    test_str("examples/without_a_newline.pipa", "{{ name }}");
+}

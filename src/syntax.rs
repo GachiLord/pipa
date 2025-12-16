@@ -216,7 +216,7 @@ impl<'a> Iterator for EscapeIter<'a> {
 fn lex(code: &str) -> Result<Vec<Token>, CompileError> {
     let mut tokens = vec![];
     let mut literal_begin = 0;
-    let mut literal_end = 0;
+    let mut literal_end = literal_begin;
     let mut iter = EscapeIter::new(code, 0, &[TokenType::CodeBegin, TokenType::CodeEnd]);
 
     if code.len() == 0 {
@@ -249,7 +249,8 @@ fn lex(code: &str) -> Result<Vec<Token>, CompileError> {
                 }
                 expect_symbol(&mut iter, &[TokenType::CodeEnd], false)?;
                 // set new literal boundary
-                literal_begin = end + 2; // len("}}") == 2
+                literal_begin = end + 1; // len("}}") - 1 == 2
+                literal_end = literal_begin;
                 // push code block
                 lex_code(begin, &code[begin..end], &mut tokens)?;
             },
@@ -268,6 +269,7 @@ fn lex(code: &str) -> Result<Vec<Token>, CompileError> {
         }
     }
     // push last literal token
+    dbg!(literal_begin, literal_end + 1);
     tokens.push(Token::new(literal_begin, literal_end + 1, TokenType::Literal));
 
     // for t in &tokens {

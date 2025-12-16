@@ -230,7 +230,9 @@ fn lex(code: &str) -> Result<Vec<Token>, CompileError> {
             (false, "{") => {
                 // push literal
                 literal_end = i;
-                tokens.push(Token::new(literal_begin, literal_end, TokenType::Literal));
+                if i != 0 {
+                    tokens.push(Token::new(literal_begin, literal_end, TokenType::Literal));
+                } 
                 // process code block
                 expect_symbol(&mut iter, &[TokenType::CodeBegin], false)?;
                 let begin = i + 2;
@@ -250,8 +252,7 @@ fn lex(code: &str) -> Result<Vec<Token>, CompileError> {
                 }
                 expect_symbol(&mut iter, &[TokenType::CodeEnd], false)?;
                 // set new literal boundary
-                literal_begin = end + 2; // len("}}") - 1 == 1
-                literal_end = cmp::min(literal_begin, code.len() - 1);
+                literal_begin = end + 2; // len("}}") == 2
                 // push code block
                 lex_code(begin, &code[begin..end], &mut tokens)?;
             },
@@ -270,7 +271,9 @@ fn lex(code: &str) -> Result<Vec<Token>, CompileError> {
         }
     }
     // push last literal token
-    tokens.push(Token::new(literal_begin, literal_end + 1, TokenType::Literal));
+    if literal_begin < literal_end + 1 {
+        tokens.push(Token::new(literal_begin, literal_end + 1, TokenType::Literal));
+    }
 
     Ok(tokens)
 }
@@ -597,6 +600,9 @@ pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
                             expanded.push(nn);
                         }
                     }
+                } else {
+                    // if name is the last node
+                    expanded.push(n);
                 }
             }
             InnerNode::NewLine => {},

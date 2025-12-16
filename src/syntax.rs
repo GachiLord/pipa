@@ -2,6 +2,7 @@ use unicode_segmentation::{UnicodeSegmentation, Graphemes};
 use std::iter::Enumerate;
 use std::collections::HashMap;
 use std::fmt;
+use std::cmp;
 use crate::error::CompileError;
 
 
@@ -249,8 +250,8 @@ fn lex(code: &str) -> Result<Vec<Token>, CompileError> {
                 }
                 expect_symbol(&mut iter, &[TokenType::CodeEnd], false)?;
                 // set new literal boundary
-                literal_begin = end + 1; // len("}}") - 1 == 2
-                literal_end = literal_begin;
+                literal_begin = end + 2; // len("}}") - 1 == 1
+                literal_end = cmp::min(literal_begin, code.len() - 1);
                 // push code block
                 lex_code(begin, &code[begin..end], &mut tokens)?;
             },
@@ -269,12 +270,7 @@ fn lex(code: &str) -> Result<Vec<Token>, CompileError> {
         }
     }
     // push last literal token
-    dbg!(literal_begin, literal_end + 1);
     tokens.push(Token::new(literal_begin, literal_end + 1, TokenType::Literal));
-
-    // for t in &tokens {
-    //     println!("{}: {}", t.token_type, &code[t.first_char..t.end_char]);
-    // }
 
     Ok(tokens)
 }

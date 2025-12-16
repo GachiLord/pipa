@@ -123,3 +123,9 @@ fn multiple_usage_of_macro() {
 fn multiple_macro_definition() {
     test_file("examples/multiple_macro_definition.pipa");
 }
+
+#[test]
+fn only_var() {
+    test_file("examples/only_var.pipa");
+}
+

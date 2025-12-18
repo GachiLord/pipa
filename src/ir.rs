@@ -197,7 +197,8 @@ pub fn gen_ir(code: &str, mut ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
             InnerNode::Name { .. } => {
                 let name: Box<str> = node.as_str(code).into();
 
-                if !scope.contains(name.as_ref()) && is_name_reserved(&name) {
+                // Names cannot be piped
+                if is_name_reserved(&name) {
                     return Err(CompileError::new_undefined_var(node.first_char, name.into()));
                 }
 

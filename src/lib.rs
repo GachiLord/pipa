@@ -98,6 +98,12 @@ fn undefined_scope() {
 
 #[test]
 #[should_panic]
+fn undefined_scope_single() {
+    test_file("examples/undefined_scope_single.pipa");
+}
+
+#[test]
+#[should_panic]
 fn undefined_scope_with_range() {
     test_file("examples/undefined_scope_with_range.pipa");
 }

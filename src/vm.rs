@@ -110,7 +110,7 @@ impl Vm {
                 let var = self.get_string_var(&name)?;
                 let graphemes: Vec<&str> = UnicodeSegmentation::graphemes(var, true).collect();
                 let mut start = start.unwrap_or(0);                
-                let end = std::cmp::min(var.len(), end.unwrap_or(var.len()));                
+                let end = std::cmp::min(var.len(), end.unwrap_or(graphemes.len()));                
 
                 while start < end {
                     output.push_str(graphemes[start]);                    

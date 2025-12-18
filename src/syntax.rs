@@ -165,6 +165,7 @@ pub enum InnerNode {
 struct EscapeIter<'a> {
     is_escaping: bool,
     offset: usize,
+    index: usize,
     iter: Enumerate<Graphemes<'a>>,
     tokens: Vec<TokenType>,
 }
@@ -176,6 +177,7 @@ impl<'a> EscapeIter<'a> {
         Self {
             iter,
             offset,
+            index: 0,
             is_escaping: false,
             tokens: tokens.to_vec(),
         }
@@ -188,7 +190,8 @@ impl<'a> Iterator for EscapeIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
 
         while let Some((i, t)) = self.iter.next() {
-            let i = i + self.offset;
+            let i = self.index + self.offset;
+            self.index += t.len();
 
             if t == "\\" && !self.is_escaping {
                 self.is_escaping = true;

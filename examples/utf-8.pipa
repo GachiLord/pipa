@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>This is a title </title>
+  </head>
+  <body>
+    <div>
+        <p>
+        {{
+          "Привет, мир!" | "Russians say: $(_)"
+
+          ""
+        }}
+        </p>
+        <p>{{ sirname }}</p>
+    </div>
+  </body>
+</html>

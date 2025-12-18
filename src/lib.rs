@@ -138,3 +138,8 @@ fn only_var() {
 fn without_a_newline() {
     test_str("examples/without_a_newline.pipa", "{{ name }}");
 }
+
+#[test]
+fn utf_8() {
+    test_file("examples/utf-8.pipa");
+}

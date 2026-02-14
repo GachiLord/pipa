@@ -4,7 +4,7 @@ use crate::syntax::TokenType;
 use unicode_segmentation::UnicodeSegmentation;
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ErrorReason {
     SyntaxError {
         expected: Vec<TokenType>,
@@ -32,8 +32,8 @@ pub enum ErrorReason {
 
 #[derive(Debug)]
 pub struct CompileError {
-    first_char: usize,
-    reason: ErrorReason,
+    pub first_char: usize,
+    pub reason: ErrorReason,
 }
 
 impl CompileError {

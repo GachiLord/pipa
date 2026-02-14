@@ -42,6 +42,12 @@ fn empty() {
     assert_ok!(test_file("examples/empty.pipa"));
 }
 
+
+#[test]
+fn empty_without_newline() {
+    assert_ok!(test_str(""));
+}
+
 #[test]
 fn empty_code() {
     assert_ok!(test_file("examples/empty_code.pipa"));

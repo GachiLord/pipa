@@ -2,7 +2,6 @@ use unicode_segmentation::{UnicodeSegmentation, Graphemes};
 use std::iter::Enumerate;
 use std::collections::HashMap;
 use std::fmt;
-use std::cmp;
 use crate::error::CompileError;
 
 
@@ -189,7 +188,7 @@ impl<'a> Iterator for EscapeIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
 
-        while let Some((i, t)) = self.iter.next() {
+        while let Some((_, t)) = self.iter.next() {
             let i = self.index + self.offset;
             self.index += t.len();
 

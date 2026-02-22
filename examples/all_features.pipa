@@ -6,10 +6,10 @@
   <body>
     <div>
         \{\{
-        <p>{{ name }}</p>
-        <p>{{ sirname }}</p>
+        <p>{{ first }}</p>
+        <p>{{ second }}</p>
         {{
-          @add_hello "Hello: \$_\$ => @..? \"$(arg)\" $(_)" # there is escaping and comments
+          @add_hello "Hello: \$_\$ => @..? \"$(third)\" $(_)" # there is escaping and comments
           @const_msg "This is a function that returns a constant value"
 
           69 "\n\t"
@@ -20,13 +20,13 @@
 
           "\n\t"
 
-          ARGS[:] | "$(_index_): $(_item_)\n\t"
+          PHONES[:] | "$(_index_): $(_item_)\n\t"
 
           "\n\t"
 
           ?const_msg "\n\t"
 
-          "<h1>that's the $(name) rule<h2>\n\t" | "fuck$(_)this$(_)"
+          "<h1>that's the $(forth) rule<h2>\n\t" | "fuck$(_)this$(_)"
         }}
     </div>
   </body>

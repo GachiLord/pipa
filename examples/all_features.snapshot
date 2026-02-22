@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>This is a title </title>
+  </head>
+  <body>
+    <div>
+        {{
+        <p>first arg</p>
+        <p>second arg</p>
+        69
+	
+	
+	Hello: $_$ => @..? "third arg" <h1>first element0<h2>
+	Hello: $_$ => @..? "third arg" <h1>second element1<h2>
+	Hello: $_$ => @..? "third arg" <h1>third element2<h2>
+	
+	0: 555-123-4567
+	1: 555-987-6543
+	2: 555-555-0000
+	
+	This is a function that returns a constant value
+	fuck<h1>that's the четвертый аргумент rule<h2>
+	this<h1>that's the четвертый аргумент rule<h2>
+	
+    </div>
+  </body>
+</html>

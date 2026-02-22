@@ -6,9 +6,7 @@
   <body>
     <div>
         <p>
-        {{
-          "\"Hello\{\}, $(first) $(second)\""
-        }}
+        "Hello{}, first arg second arg"
         </p>
     </div>
   </body>

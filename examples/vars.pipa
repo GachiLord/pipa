@@ -5,8 +5,8 @@
   </head>
   <body>
     <div>
-        <p>{{ name }}</p>
-        <p>{{ sirname }}</p>
+        <p>{{ first }}</p>
+        <p>{{ second }}</p>
     </div>
   </body>
 </html>

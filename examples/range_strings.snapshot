@@ -5,11 +5,8 @@
   </head>
   <body>
     <div>
-        <p>
-        {{
-          "\"Hello\{\}, $(first) $(second)\""
-        }}
-        </p>
+        <p>fir</p>
+        <p>четве</p>
     </div>
   </body>
 </html>

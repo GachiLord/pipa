@@ -5,7 +5,7 @@
   </head>
   <body>
     <div>
-        <p>{{ name}}</p>
+        <p>{{ first}}</p>
     </div>
   </body>
 </html>

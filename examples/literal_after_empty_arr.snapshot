@@ -6,17 +6,13 @@
   <body>
     <div>
         <p>Hello,</p>
-        <p>{{ first }}</p>
-        <p>{{ second }}</p>
+        <p>first arg</p>
+        <p>second arg</p>
         <p>
-        {{
-          "Hello, $(first) $(second)"
-        }}
+        Hello, first arg second arg
         <p>This page is generated using the pipa language</p>
         <ul>
-          {{
-            ARGS[:] | "$(_index_): $(_item_)" | "<li>$(_)</li>"
-          }}
+          <li>0: first element</li><li>1: second element</li><li>2: third element</li>
         </ul>
     </div>
   </body>

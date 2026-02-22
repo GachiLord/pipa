@@ -11,7 +11,7 @@
           @print_me "$(_index_) $(_item_)\n\t"
 
           ARGS[:] | ?print
-          ARGS[:] | ?print_me
+          PHONES[:] | ?print_me
         }}
         </p>
     </div>

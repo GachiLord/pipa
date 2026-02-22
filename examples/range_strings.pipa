@@ -5,8 +5,8 @@
   </head>
   <body>
     <div>
-        <p>{{ name[0:3] }}</p>
-        <p>{{ sirname }}</p>
+        <p>{{ first[0:3] }}</p>
+        <p>{{ forth[0:5] }}</p>
     </div>
   </body>
 </html>

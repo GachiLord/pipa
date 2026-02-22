@@ -5,11 +5,7 @@
   </head>
   <body>
     <div>
-        <p>
-        {{
-          "\"Hello\{\}, $(first) $(second)\""
-        }}
-        </p>
+        <p>first arg</p>
     </div>
   </body>
 </html>

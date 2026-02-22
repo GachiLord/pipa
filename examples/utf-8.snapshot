@@ -6,10 +6,9 @@
   <body>
     <div>
         <p>
-        {{
-          "\"Hello\{\}, $(first) $(second)\""
-        }}
+        Russians say: Привет, мир!
         </p>
+        <p>第六个论点</p>
     </div>
   </body>
 </html>

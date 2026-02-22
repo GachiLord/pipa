@@ -6,12 +6,13 @@
   <body>
     <div>
         <p>
-        {{
-          @print "$(_item_)\n\t"
-
-          ARGS[:] | ?print
-          PHONES[:] | ?print
-        }}
+        first element
+	second element
+	third element
+	555-123-4567
+	555-987-6543
+	555-555-0000
+	
         </p>
     </div>
   </body>

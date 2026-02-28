@@ -64,7 +64,12 @@ fn array_no_new_line() {
     assert_eq!(err_reason(test_file("negative_examples/array_no_new_line.pipa")), ErrorReason::ArrayNoNewLine);
 }
 
-// strings
+// syntax
+
+#[test]
+fn missing_space_name_string() {
+    assert_eq!(err_reason(test_file("negative_examples/missing_space_name_string.pipa")), ErrorReason::SyntaxError { expected: vec![TokenType::Space, TokenType::NewLine, TokenType::RangeBegin] });
+}
 
 #[test]
 fn broken_string() {

@@ -306,6 +306,10 @@ fn lex_code(first_char: usize, code: &str, tokens: &mut Vec<Token>) -> Result<()
                             found_boundary = true;
                             break;
                         },
+                        (false, "\n") | (false, "\r\n") => {
+                            // stop at new lines
+                            break;
+                        },
                         (_, &_) => {}
                     }
                 }

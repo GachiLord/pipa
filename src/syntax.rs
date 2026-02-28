@@ -601,7 +601,7 @@ pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
                         _ => {
                             // if name is array, that means there should be range expr
                             if is_name_array(n.as_str(code)) {
-                                return Err(CompileError::new_syntax(n.first_char, &[TokenType::RangeBegin]))
+                                return Err(CompileError::new_syntax(n.end_char, &[TokenType::RangeBegin]))
                             }
                             // otherwise treat it like a name
                             expanded.push(n);

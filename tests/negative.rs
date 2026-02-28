@@ -20,6 +20,7 @@ fn test_file(filename: &str) -> Result<(), CompileError> {
     Ok(())
 }
 
+// pipes
 
 #[test]
 fn undefined_scope() {
@@ -42,6 +43,23 @@ fn undefined_scope_with_range() {
 }
 
 #[test]
+fn orphan_pipe() {
+    assert_eq!(err_reason(test_file("negative_examples/orphan_pipe.pipa")), ErrorReason::PipeNoParent);
+}
+
+#[test]
+fn array_not_piped() {
+    assert_eq!(err_reason(test_file("negative_examples/array_not_piped.pipa")), ErrorReason::ArrayNotPiped);
+}
+
+#[test]
+fn array_no_new_line() {
+    assert_eq!(err_reason(test_file("negative_examples/array_no_new_line.pipa")), ErrorReason::ArrayNoNewLine);
+}
+
+// strings
+
+#[test]
 fn broken_string() {
     assert_eq!(err_reason(test_file("negative_examples/broken_string.pipa")), ErrorReason::SyntaxError { expected: vec![TokenType::Quote] }); 
 }
@@ -50,6 +68,8 @@ fn broken_string() {
 fn broken_string_piped() {
     assert_eq!(err_reason(test_file("negative_examples/broken_string_piped.pipa")), ErrorReason::SyntaxError { expected: vec![TokenType::Quote] }); 
 }
+
+// macro
 
 #[test]
 fn nested_macro() {

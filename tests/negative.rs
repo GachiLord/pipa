@@ -15,8 +15,17 @@ fn test_str(code: &str) -> Result<(), CompileError> {
 
 fn test_file(filename: &str) -> Result<(), CompileError> {
     let code = read_to_string(filename).unwrap();
+    let r = test_str(&code);
 
-    test_str(&code)?;
+    if let Err(ref e) = r {
+        let mut output = Vec::new();
+
+        e.write_message(&mut output, filename, &code).unwrap();
+        println!("{}", String::from_utf8(output).unwrap());
+
+        return r;
+    }
+
     Ok(())
 }
 

@@ -123,8 +123,8 @@ impl CompileError {
         }
     }
 
-    pub fn write_message(self, f: &mut impl Write, filename: &str, code: &str) -> io::Result<()> {
-        match self.reason {
+    pub fn write_message(&self, f: &mut impl Write, filename: &str, code: &str) -> io::Result<()> {
+        match &self.reason {
             ErrorReason::SyntaxError { expected } => {
                 if expected.len() > 0 {
                     let expected = expected.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(", ");

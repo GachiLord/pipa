@@ -28,8 +28,12 @@ fn undefined_scope() {
 
 #[test]
 fn undefined_scope_single() {
-
     assert_eq!(err_reason(test_file("negative_examples/undefined_scope_single.pipa")), ErrorReason::UndefinedVar { name: "_".into() });
+}
+
+#[test]
+fn undefined_scope_single_with_range() {
+    assert_eq!(err_reason(test_file("negative_examples/undefined_scope_single_with_range.pipa")), ErrorReason::UndefinedVar { name: "_".into() });
 }
 
 #[test]

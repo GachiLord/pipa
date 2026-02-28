@@ -43,6 +43,11 @@ fn broken_string() {
 }
 
 #[test]
+fn broken_string_piped() {
+    assert_eq!(err_reason(test_file("negative_examples/broken_string_piped.pipa")), ErrorReason::SyntaxError { expected: vec![TokenType::Quote] }); 
+}
+
+#[test]
 fn nested_macro() {
     assert_eq!(err_reason(test_file("negative_examples/nested_macro.pipa")), ErrorReason::NestedMacro); 
 }

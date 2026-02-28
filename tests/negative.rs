@@ -20,6 +20,13 @@ fn test_file(filename: &str) -> Result<(), CompileError> {
     Ok(())
 }
 
+// names
+
+#[test]
+fn invalid_name() {
+    assert_eq!(err_reason(test_file("negative_examples/invalid_name.pipa")), ErrorReason::NameError);
+}
+
 // pipes
 
 #[test]

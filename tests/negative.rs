@@ -86,6 +86,11 @@ fn array_no_braces() {
     assert_eq!(err_reason(test_file("negative_examples/array_no_braces.pipa")), ErrorReason::SyntaxError { expected: vec![TokenType::RangeBegin] }); 
 }
 
+#[test]
+fn array_mismatched_brace() {
+    assert_eq!(err_reason(test_file("negative_examples/array_mismatched_brace.pipa")), ErrorReason::SyntaxError { expected: vec![TokenType::Space, TokenType::NewLine, TokenType::RangeBegin] }); 
+}
+
 // macro
 
 #[test]

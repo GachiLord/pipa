@@ -80,3 +80,15 @@ fn nested_macro() {
 fn empty_macro() {
     assert_eq!(err_reason(test_file("negative_examples/empty_macro.pipa")), ErrorReason::SyntaxError { expected: vec![TokenType::Space] }); 
 }
+
+
+#[test]
+fn undefined_macro() {
+    assert_eq!(err_reason(test_file("negative_examples/undefined_macro.pipa")), ErrorReason::UndefinedMacro { name: "print".into() }); 
+}
+
+
+#[test]
+fn macro_redifinition() {
+    assert_eq!(err_reason(test_file("negative_examples/macro_redifinition.pipa")), ErrorReason::MacroRedefinition { name: "print".into() }); 
+}

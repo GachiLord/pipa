@@ -3,6 +3,7 @@ use std::iter::Enumerate;
 use std::collections::HashMap;
 use std::fmt;
 use crate::error::CompileError;
+use crate::ir::is_name_array;
 
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -598,6 +599,11 @@ pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
                             expanded.push(n);
                         },
                         _ => {
+                            // if name is array, that means there should be range expr
+                            if is_name_array(n.as_str(code)) {
+                                return Err(CompileError::new_syntax(n.first_char, &[TokenType::RangeBegin]))
+                            }
+                            // otherwise treat it like a name
                             expanded.push(n);
                             expanded.push(nn);
                         }

@@ -81,6 +81,11 @@ fn broken_string_piped() {
     assert_eq!(err_reason(test_file("negative_examples/broken_string_piped.pipa")), ErrorReason::SyntaxError { expected: vec![TokenType::Quote] }); 
 }
 
+#[test]
+fn array_no_braces() {
+    assert_eq!(err_reason(test_file("negative_examples/array_no_braces.pipa")), ErrorReason::SyntaxError { expected: vec![TokenType::RangeBegin] }); 
+}
+
 // macro
 
 #[test]

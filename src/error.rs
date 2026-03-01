@@ -174,52 +174,59 @@ impl CompileError {
 
 fn error_message(f: &mut impl Write, filename: &str, code: &str, first_char: usize, message: &str) -> io::Result<()> 
 {
-    write!(f, "{}:\n\n", filename)?;
-    let mut iter = code.graphemes(true);
-    let mut last_line = 0;
-    let mut i = 0;
+    let mut needle = None;
+    let mut caret = 0;
+    let mut output = String::new();
 
-    while let Some(g) = iter.next() {
-        if i == first_char {
-            write!(f, "{}", g)?;
+    for (i, line) in code.lines().enumerate() {
 
-            while let Some(g) = iter.next() {
-                write!(f, "{}", g)?;
-                if g == "\n" || g == "\r\n" {
+        // find the relative first_char
+        for (i, g) in UnicodeSegmentation::graphemes(line, true).enumerate() {
+            output.push_str(g);
+
+            if caret == first_char {
+                needle = Some(i);
+            }
+
+            caret += 1;
+        }
+
+        // take in account new lines
+        caret += 1;
+
+        if let Some(needle_i) = needle {
+            // write header and the line
+            write!(f, "{}:{}:{}\n\n", filename, i + 1, needle_i)?;
+            write!(f, "{}\n", output)?;
+            // write message
+            for (i, g) in UnicodeSegmentation::graphemes(line, true).enumerate() {
+                if i == needle_i {
+                    write!(f, "^\n")?;
                     break;
                 }
-            }
 
-            if first_char > 0 {
-                for _ in last_line..first_char - 1 {
-                    write!(f, " ")?;
-                }
-            }
-            write!(f, "^")?;
-            write!(f, "\n")?;
-
-            if first_char > 0 {
-                for _ in last_line..first_char - 1 {
-                    write!(f, " ")?;
+                match g {
+                    " " | "\t" => write!(f, "{}", g)?,
+                    _ => write!(f, " ")?,
                 }
             }
 
-            write!(f, "{}", message)?;
+            for (i, g) in UnicodeSegmentation::graphemes(line, true).enumerate() {
+                if i == needle_i {
+                    write!(f, "{}\n", message)?;
+                    break;
+                }
 
-            write!(f, "\n\n")?;
-
-            i += 1;
-            continue;
+                match g {
+                    " " | "\t" => write!(f, "{}", g)?,
+                    _ => write!(f, " ")?,
+                }
+            }
+            
+            break;
         }
 
-        if g == "\n" || g == "\r\n" {
-            last_line = i;
-        }
-
-        // add chars to buf
-        write!(f, "{}", g)?;
-
-        i += 1;
+        output.clear();
     }
 
     Ok(())

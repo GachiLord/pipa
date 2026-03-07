@@ -250,10 +250,24 @@ fn lex(code: &str) -> Result<Vec<Token>, CompileError> {
                             end = ni;
                             break;
                         },
-                        (_, &_) => {}
+                        (_, &_) => {
+                            end = ni;
+                        }
                     }
                 }
-                expect_symbol(&mut iter, &[TokenType::CodeEnd], false)?;
+                // Special case: check if iter is not empty because we're working on literal level here.
+                // That means there is a chance that we consume whole symbols in previous step and
+                // brake diagnostics message.
+                //
+                // For code level this isn't required and thus not happening  
+                if let Err(err) = expect_symbol(&mut iter, &[TokenType::CodeEnd], false) {
+
+                    if err.first_char == 0 {
+                        return Err(CompileError::new_syntax(end, &[TokenType::CodeEnd]));
+                    }
+
+                    return Err(err);
+                }
                 // set new literal boundary
                 literal_begin = end + 2; // len("}}") == 2
                 // push code block
@@ -414,7 +428,6 @@ fn find_symbol<'a>(iter: &mut impl Iterator<Item = (bool, usize, &'a str)>, expe
         }
     }
 
-    dbg!(c);
     return Err(CompileError::new_syntax(c, expected));
 }
 

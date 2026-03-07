@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 use crate::ir::Type;
-use crate::syntax::TokenType;
+use crate::syntax::{TokenType, EscapeIter};
 use unicode_segmentation::UnicodeSegmentation;
 
 
@@ -174,59 +174,70 @@ impl CompileError {
 
 fn error_message(f: &mut impl Write, filename: &str, code: &str, first_char: usize, message: &str) -> io::Result<()> 
 {
-    let mut needle = None;
-    let mut caret = 0;
+    let mut line = 1;
+    let mut line_start = 0;
     let mut output = String::new();
+    let mut iter = EscapeIter::new(code, 0, &[TokenType::CodeBegin, TokenType::CodeEnd]);
 
-    for (i, line) in code.lines().enumerate() {
+    while let Some((_, i, g)) = iter.next() {
+        output.push_str(g);
 
-        // find the relative first_char
-        for (i, g) in UnicodeSegmentation::graphemes(line, true).enumerate() {
-            output.push_str(g);
+        if i == first_char {
+            // go to the end of the line
+            if g != "\n" && "g" != "\r\n" {
+                while let Some((_, _, g)) = iter.next() {
 
-            if caret == first_char {
-                needle = Some(i);
+                    if g == "\n" || g == "\r\n" {
+                        break;
+                    }
+
+                    output.push_str(g);
+                }
             }
 
-            caret += 1;
-        }
+            // write header
+            write!(f, "{}:{}:{}\n", filename, line, i - std::cmp::min(i, line_start))?;
 
-        // take in account new lines
-        caret += 1;
-
-        if let Some(needle_i) = needle {
-            // write header and the line
-            write!(f, "{}:{}:{}\n\n", filename, i + 1, needle_i)?;
-            write!(f, "{}\n", output)?;
-            // write message
-            for (i, g) in UnicodeSegmentation::graphemes(line, true).enumerate() {
-                if i == needle_i {
-                    write!(f, "^\n")?;
-                    break;
-                }
-
+            // write the line
+            for g in UnicodeSegmentation::graphemes(output.as_str(), true) {
                 match g {
-                    " " | "\t" => write!(f, "{}", g)?,
-                    _ => write!(f, " ")?,
+                    "\n" => write!(f, " ")?,
+                    _ => write!(f, "{}", g)?
                 }
             }
 
-            for (i, g) in UnicodeSegmentation::graphemes(line, true).enumerate() {
-                if i == needle_i {
-                    write!(f, "{}\n", message)?;
-                    break;
-                }
-
-                match g {
-                    " " | "\t" => write!(f, "{}", g)?,
-                    _ => write!(f, " ")?,
-                }
-            }
+            write!(f, "\n")?;
             
-            break;
+            // write error message aligned to the line
+            let iter = EscapeIter::new(&output, line_start + 1, &[TokenType::CodeBegin, TokenType::CodeEnd]);
+            let mut offset_str = String::new();
+            
+            // find the offset string
+            for (_, i, g) in iter {
+                match g {
+                    " " | "\t" => offset_str.push_str(g),
+                    _ => offset_str.push_str(" ")
+                }
+
+                if i == first_char {
+                    break;
+                }
+            }
+
+            // write message
+            write!(f, "{}", offset_str)?;
+            write!(f, "^")?;
+
+
+            write!(f, "\n{}{}\n", offset_str, message)?;
         }
 
-        output.clear();
+        if g == "\n" || g == "\r\n" {
+            line_start = i + 1;
+            line += 1;
+            output.clear();
+        }
+
     }
 
     Ok(())

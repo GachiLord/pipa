@@ -162,7 +162,7 @@ pub enum InnerNode {
     NewLine,
 }
 
-struct EscapeIter<'a> {
+pub struct EscapeIter<'a> {
     is_escaping: bool,
     offset: usize,
     index: usize,
@@ -171,7 +171,7 @@ struct EscapeIter<'a> {
 }
 
 impl<'a> EscapeIter<'a> {
-    fn new(s: &'a str, offset: usize, tokens: &[TokenType]) -> Self {
+    pub fn new(s: &'a str, offset: usize, tokens: &[TokenType]) -> Self {
         let iter = UnicodeSegmentation::graphemes(s, true).enumerate();
 
         Self {

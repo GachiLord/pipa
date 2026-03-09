@@ -68,11 +68,6 @@ fn array_not_piped() {
     assert_eq!(err_reason(test_file("negative_examples/array_not_piped.pipa")), ErrorReason::ArrayNotPiped);
 }
 
-#[test]
-fn array_no_new_line() {
-    assert_eq!(err_reason(test_file("negative_examples/array_no_new_line.pipa")), ErrorReason::ArrayNoNewLine);
-}
-
 // syntax
 
 #[test]

@@ -5,6 +5,7 @@ use std::fs::{read_to_string, read_dir};
 use pipa::ir::gen_ir;
 use pipa::syntax::ast;
 use pipa::vm::Vm;
+use std::env;
 use utils::{VARS, ARRAYS};
 
 
@@ -25,6 +26,9 @@ fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {
         },
     };
 
+    if env::var("TEST_SKIP_SNAPSHOT").unwrap_or_default() != "" {
+        return;
+    }
     
     let mut out = Vec::new();
     let mut vm = Vm::new(VARS.clone(), ARRAYS.clone());

@@ -116,6 +116,7 @@ pub fn is_name_array(name: &str) -> bool {
     name.chars().all(|v| v.is_uppercase())
 }
 
+/*
 fn is_node_pipe(ast: &Vec<Node>, mut index: usize) -> bool {
     while let Some(n) = ast.get(index) {
         match *n.inner {
@@ -130,7 +131,9 @@ fn is_node_pipe(ast: &Vec<Node>, mut index: usize) -> bool {
 
     false
 }
+*/
 
+/*
 fn expect_string(ast: &Vec<Node>, mut index: usize) -> Result<(), CompileError> {
     while let Some(n) = ast.get(index) {
         match *n.inner {
@@ -165,13 +168,15 @@ fn expect_string(ast: &Vec<Node>, mut index: usize) -> Result<(), CompileError> 
 
     Err(CompileError::new_syntax(ast[index - 1].first_char, &[TokenType::String]))
 }
+*/
 
 pub fn gen_ir(code: &str, mut ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
     let mut ops = Vec::with_capacity(ast.len());
     let mut i = 0;
-    let mut array_start = None;
-    let mut scope = HashSet::new();
+    // let mut array_start = None;
+    // let mut scope = HashSet::new();
 
+    /*
     while i < ast.len() {
         let node = &ast[i];
         
@@ -318,6 +323,7 @@ pub fn gen_ir(code: &str, mut ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
 
         i += 1;
     }
+    */
 
     Ok(ops)
 }

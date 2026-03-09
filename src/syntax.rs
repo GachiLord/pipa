@@ -1,9 +1,9 @@
 use unicode_segmentation::{UnicodeSegmentation, Graphemes};
-use std::iter::Enumerate;
+use std::iter::{Enumerate, Peekable};
 use std::collections::HashMap;
 use std::fmt;
 use crate::error::CompileError;
-use crate::ir::is_name_array;
+use crate::ir::{is_name_array, Type};
 
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -105,18 +105,40 @@ impl Token {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub enum InnerNode {
+    String {
+        children: Vec<Node>
+    },
+    Int {
+        value: usize,
+    },
+    Array {
+        name: Box<str>,
+        start: Option<usize>,
+        end: Option<usize>,
+    },
+    MacroDef,
+    MacroExp,
+    Literal,
+    Name,
+}
+
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct Node {
     pub first_char: usize,
     pub end_char: usize,
     pub inner: Box<InnerNode>,
+    pub children: Vec<Node>,
 }
 
 impl Node {
-    fn new(first_char: usize, end_char: usize, inner: InnerNode) -> Self {
+    fn new(first_char: usize, end_char: usize, inner: InnerNode, children: Vec<Node>) -> Self {
         Node {
             first_char,
             end_char,
             inner: Box::new(inner),
+            children,
         }
     }
 
@@ -135,31 +157,6 @@ impl Node {
             }
         }).collect()
     }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum InnerNode {
-    String {
-        children: Vec<Node>,
-    },
-    Int {
-        value: usize,
-    },
-    Range {
-        start: Option<usize>,
-        end: Option<usize>,
-    },
-    Array {
-        name: Box<str>,
-        start: Option<usize>,
-        end: Option<usize>,
-    },
-    MacroDef,
-    MacroExp,
-    Literal,
-    Name,
-    Pipe,
-    NewLine,
 }
 
 pub struct EscapeIter<'a> {
@@ -454,6 +451,11 @@ fn find_boundary<'a>(first_char: usize, iter: &mut impl Iterator<Item = (bool, u
     Ok(c + 1)
 }
 
+fn parse_int(t: Token, code: &str) -> Node {
+    let value = t.as_str(code).parse::<usize>().unwrap();
+    Node::new(t.first_char, t.end_char, InnerNode::Int { value }, vec![])
+}
+
 fn parse_string(first_char: usize, end_char: usize, string: &str) -> Result<Node, CompileError> {
     let mut first_literal = first_char + 1;
     let mut end_literal = 0;
@@ -464,12 +466,12 @@ fn parse_string(first_char: usize, end_char: usize, string: &str) -> Result<Node
         match (is_escaping, t) {
             (false, "$") => {
                 if i - first_literal != 0 {
-                    nodes.push(Node::new(first_literal, i, InnerNode::Literal));
+                    nodes.push(Node::new(first_literal, i, InnerNode::Literal, vec![]));
                 } 
                 expect_symbol(&mut iter, &[TokenType::ExprBegin], false)?;
                 expect_symbol(&mut iter, &[TokenType::Literal], false)?;
                 first_literal = find_boundary(i, &mut iter, TokenType::Literal, &[TokenType::ExprEnd])?;
-                nodes.push(Node::new(i + 2, first_literal, InnerNode::Name));
+                nodes.push(Node::new(i + 2, first_literal, InnerNode::Name, vec![]));
                 first_literal += 1;
                 end_literal = first_literal;
             },
@@ -480,16 +482,17 @@ fn parse_string(first_char: usize, end_char: usize, string: &str) -> Result<Node
     }
 
     if end_literal - first_literal != 0 {
-        nodes.push(Node::new(first_literal, end_literal, InnerNode::Literal));
+        nodes.push(Node::new(first_literal, end_literal, InnerNode::Literal, vec![]));
     } 
 
-    let s = Node::new(first_char, end_char, InnerNode::String { children: nodes });
+    let s = Node::new(first_char, end_char, InnerNode::String { children: nodes }, vec![]);
 
     Ok(s)
 }
 
-fn parse_range(first_char: usize, end_char: usize, range: &str) -> Result<Node, CompileError> {
-    let mut iter = EscapeIter::new(range, first_char, &[]);
+fn parse_array(parent: Node, child: Token, code: &str) -> Result<Node, CompileError> {
+    let range = child.as_str(code);
+    let mut iter = EscapeIter::new(range, child.first_char, &[]);
     let mut start = None;
     let mut separator = 0;
     let mut end = None;
@@ -499,142 +502,196 @@ fn parse_range(first_char: usize, end_char: usize, range: &str) -> Result<Node, 
     match expect_symbol(&mut iter, &[TokenType::Int], false) {
         Ok(_) => {
             separator = find_boundary(0, &mut iter, TokenType::Int, &[TokenType::RangeSep])?;
-            let token = &range[1..separator - first_char];
+            let token = &range[1..separator - child.first_char];
             start = Some(token.parse::<usize>().unwrap());
         },
         Err(_) => {
-            separator += first_char + 1;
+            separator += child.first_char + 1;
         }
     }
 
     if let Ok(_) = expect_symbol(&mut iter, &[TokenType::Int], false) {
         let boundary = find_boundary(0, &mut iter, TokenType::Int, &[TokenType::RangeEnd])?;
-        let token = &range[separator - first_char + 1..boundary - first_char];
+        let token = &range[separator - child.first_char + 1..boundary - child.first_char];
         end = Some(token.parse::<usize>().unwrap());
     }
 
-    let n = Node::new(first_char, end_char, InnerNode::Range { start, end });
+    let n = Node::new(parent.first_char, child.end_char, InnerNode::Array { name: parent.as_str(code).into(), start, end }, vec![]);
 
     Ok(n)
 }
 
-pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
-    let mut nodes = vec![];
-    let tokens = lex(code)?;
+fn parse_expr<'a>(macro_table: &HashMap<Box<str>, Node>, mut parent: Node, iter: &mut Peekable<impl Iterator<Item=&'a Token>>, code: &str) -> Result<Node, CompileError> {
+    let mut tail = &mut parent;
 
-    // parse strings and ranges
-    for t in tokens {
+    loop {
+
+        match iter.next() {
+            Some(t) => {
+                match t.token_type {
+                    TokenType::Literal => {
+                        return Err(CompileError::new_pipe_no_children(tail.first_char))
+                    },
+                    TokenType::Int => {
+                        return Err(CompileError::new_type_error(t.first_char, Type::String, Type::Int));
+                    },
+                    TokenType::Name => {
+                        return Err(CompileError::new_type_error(t.first_char, Type::String, Type::Name));
+                    }
+                    TokenType::Pipe => {
+                        return Err(CompileError::new_syntax(tail.first_char, &[TokenType::String]))
+                    },
+                    TokenType::String => {
+                        let s = parse_string(t.first_char, t.end_char, t.as_str(code))?;
+                        tail.children.push(s);
+                        tail = &mut tail.children[0];
+                    },
+                    TokenType::Range => {
+                        return Err(CompileError::new_syntax(tail.first_char, &[TokenType::String]))
+                    },
+                    TokenType::MacroDef => {
+                        return Err(CompileError::new_nested_macro(tail.first_char))
+                    },
+                    TokenType::MacroExp => {
+                        let name: String = t.as_str(code).into();
+                        let child = macro_table.get(&name.as_str()[1..]).ok_or_else(|| CompileError::new_undefined_macro(t.first_char, name))?;
+                        
+                        tail.children.push(child.clone());
+                        tail = &mut tail.children[0];
+                    },
+                    _ => {}
+                }
+            },
+            None => {
+                return Err(CompileError::new_pipe_no_children(tail.first_char))
+            }
+        }
+
+        if !has_expr(iter) {
+            break;
+        }
+    }
+
+    if parent.children.is_empty() {
+        return Err(CompileError::new_pipe_no_children(parent.first_char))
+    }
+
+    Ok(parent)
+}
+
+fn has_expr<'a>(iter: &mut Peekable<impl Iterator<Item=&'a Token>>) -> bool {
+    // skip whitespace
+    loop {
+
+        if let Some(t) = iter.peek() {
+            match t.token_type {
+                TokenType::Space | TokenType::NewLine => {},
+                TokenType::Pipe => {
+                    let _ = iter.next();
+                    return true;
+                },
+                _ => return false,
+            }
+
+            let _ = iter.next();
+        } else {
+            break;
+        }
+
+    }
+
+
+    false
+}
+
+pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
+    let tokens = lex(code)?;
+    let mut nodes = vec![];
+    let mut macro_table: HashMap<Box<str>, Node> = HashMap::new();
+    let mut iter = tokens.iter().peekable();
+
+    while let Some(t) = iter.next() {
         match t.token_type {
             TokenType::Literal => {
-                nodes.push(Node::new(t.first_char, t.end_char, InnerNode::Literal));
+                nodes.push(Node::new(t.first_char, t.end_char, InnerNode::Literal, vec![]));
             },
             TokenType::Int => {
-                let value = t.as_str(code).parse::<usize>().unwrap();
-                nodes.push(Node::new(t.first_char, t.end_char, InnerNode::Int { value }));
+                let mut int = parse_int(*t, code);
+                if has_expr(&mut iter) {
+                    int = parse_expr(&macro_table, int, &mut iter, code)?;
+                }
+                nodes.push(int);
             },
             TokenType::Name => {
-                nodes.push(Node::new(t.first_char, t.end_char, InnerNode::Name));
-            },
+                let mut parent = Node::new(t.first_char, t.end_char, InnerNode::Name, vec![]);
+                let is_arr = is_name_array(parent.as_str(code));
+
+                // handle arrays
+                match iter.peek() {
+                    Some(child) => {
+                        match child.token_type {
+                            TokenType::Range => {
+                                parent = parse_array(parent, **child, code)?;
+                                iter.next();
+                            },
+                            _ => {
+                                if is_arr {
+                                    return Err(CompileError::new_syntax(parent.first_char, &[TokenType::RangeBegin]))
+                                }
+                            }
+                        }
+                    },
+                    None => {}
+                }
+                // handle expr
+                if has_expr(&mut iter) {
+                    parent = parse_expr(&macro_table, parent, &mut iter, code)?;
+                } else if is_arr {
+                    return Err(CompileError::new_array_pipe(parent.first_char));
+                }
+
+                nodes.push(parent);
+            }
             TokenType::Pipe => {
-                nodes.push(Node::new(t.first_char, t.end_char, InnerNode::Pipe));
+                return Err(CompileError::new_pipe_no_parent(t.first_char));
             },
             TokenType::String => {
-                nodes.push(parse_string(t.first_char, t.end_char, t.as_str(code))?);
+                let mut s = parse_string(t.first_char, t.end_char, t.as_str(code))?;
+                if has_expr(&mut iter) {
+                    s = parse_expr(&macro_table, s, &mut iter, code)?;
+                }
+                nodes.push(s);
             },
             TokenType::Range => {
-                nodes.push(parse_range(t.first_char, t.end_char, t.as_str(code))?)
+                return Err(CompileError::new_syntax(t.first_char, &[TokenType::Name]));
             },
             TokenType::MacroDef => {
-                nodes.push(Node::new(t.first_char, t.end_char, InnerNode::MacroDef));
+                let mut m = Node::new(t.first_char, t.end_char, InnerNode::MacroDef, vec![]);
+
+                // assert body
+                if let None = iter.peek() {
+                    return Err(CompileError::new_empty_macro(t.first_char));
+                }
+
+                m = parse_expr(&macro_table, m, &mut iter, code)?;
+                // check macro redifinition
+                let name = &m.as_str(code)[1..];
+                if macro_table.contains_key(name) {
+                    return Err(CompileError::new_macro_redefinition(t.first_char, name.into()))
+                }
+
+                // update table
+                macro_table.insert(name.into(), m.children.pop().unwrap());
             },
             TokenType::MacroExp => {
-                nodes.push(Node::new(t.first_char, t.end_char, InnerNode::MacroExp));
-            },
-            TokenType::NewLine => {
-                nodes.push(Node::new(t.first_char, t.end_char, InnerNode::NewLine));
+                let name: String = t.as_str(code).into();
+                let child = macro_table.get(&name.as_str()[1..]).ok_or_else(|| CompileError::new_undefined_macro(t.first_char, name.as_str()[1..].into()))?;
+                nodes.push(child.clone());                
             },
             _ => {}
         }
     }
-    // expand macros and convert 'Name' + 'Range' to 'Array'
-    let mut expanded = Vec::with_capacity(nodes.len());
-    let mut iter = nodes.into_iter();
-    let mut macro_table = HashMap::new();
 
-    while let Some(n) = iter.next() {
-        match *n.inner {
-            InnerNode::MacroDef => {
-                // check if defined
-                let name = &n.as_str(code)[1..];
-
-                if macro_table.contains_key(name) {
-                    return Err(CompileError::new_macro_redefinition(n.first_char, name.to_string()));
-                }
-                // collect children
-                let mut children = vec![];
-
-                while let Some(n) = iter.next() {
-                    match *n.inner {
-                        InnerNode::NewLine => break,
-                        InnerNode::MacroExp | InnerNode::MacroDef => {
-                            return Err(CompileError::new_nesetd_macro(n.first_char));
-                        },
-                        _ => {
-                            children.push(n);
-                        },
-                    }
-                }
-
-                if children.len() == 0 {
-                    return Err(CompileError::new_empty_macro(n.first_char));
-                }
-
-                macro_table.insert(name, children);
-            },
-            InnerNode::MacroExp => {
-                let name = &n.as_str(code)[1..];
-
-                match macro_table.get(&name) {
-                    Some(n) => {
-                        expanded.extend(n.clone());
-                    },
-                    None => {
-                        return Err(CompileError::new_undefined_macro(n.first_char, name.to_string()));
-                    }
-                }
-            },
-            InnerNode::Name => {
-                if let Some(nn) = iter.next() {
-                    match *nn.inner {
-                        InnerNode::Range { start, end } => {
-                            let inner = InnerNode::Array {
-                                name: n.as_str(code).into(),
-                                start,
-                                end,
-                            };
-                            let n = Node::new(n.first_char, nn.end_char, inner);
-                            expanded.push(n);
-                        },
-                        _ => {
-                            // if name is array, that means there should be range expr
-                            if is_name_array(n.as_str(code)) {
-                                return Err(CompileError::new_syntax(n.end_char, &[TokenType::RangeBegin]))
-                            }
-                            // otherwise treat it like a name
-                            expanded.push(n);
-                            expanded.push(nn);
-                        }
-                    }
-                } else {
-                    // if name is the last node
-                    expanded.push(n);
-                }
-            }
-            InnerNode::NewLine => {},
-            _ => expanded.push(n),
-        }
-    }
-
-    Ok(expanded)
+    Ok(nodes)
 }
 

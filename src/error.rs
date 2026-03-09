@@ -22,6 +22,7 @@ pub enum ErrorReason {
     NestedMacro,
     EmptyMacro,
     PipeNoParent,
+    PipeNoChildren, 
     ArrayNoNewLine,
     ArrayNotPiped,
     TypeError {
@@ -74,6 +75,13 @@ impl CompileError {
         }
     }
 
+    pub fn new_pipe_no_children(first_char: usize) -> Self {
+        Self {
+            first_char,
+            reason: ErrorReason::PipeNoChildren,
+        }
+    }
+
     pub fn new_invalid_array(first_char: usize) -> Self {
         Self {
             first_char,
@@ -99,7 +107,7 @@ impl CompileError {
         }
     }
 
-    pub fn new_nesetd_macro(first_char: usize) -> Self {
+    pub fn new_nested_macro(first_char: usize) -> Self {
         Self {
             first_char,
             reason: ErrorReason::NestedMacro,
@@ -163,6 +171,9 @@ impl CompileError {
             },
             ErrorReason::PipeNoParent => {
                 error_message(f, filename, code, self.first_char, "Pipe has no parent")
+            },
+            ErrorReason::PipeNoChildren => {
+                error_message(f, filename, code, self.first_char, "Pipe has no children")
             },
             ErrorReason::UndefinedVar { name } => {
                 let msg = format!("Usage of undefined scope variable '{}'", name);

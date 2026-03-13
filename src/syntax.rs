@@ -117,8 +117,6 @@ pub enum InnerNode {
         start: Option<usize>,
         end: Option<usize>,
     },
-    MacroDef,
-    MacroExp,
     Literal,
     Name,
 }
@@ -666,7 +664,10 @@ pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
                 return Err(CompileError::new_syntax(t.first_char, &[TokenType::Name]));
             },
             TokenType::MacroDef => {
-                let mut m = Node::new(t.first_char, t.end_char, InnerNode::MacroDef, vec![]);
+                // It doesn't metter what node type we assing here,
+                // because it won't be used anyway. However parse_expr function requires some sort
+                // of a parent node to work, so we pass a Name there
+                let mut m = Node::new(t.first_char, t.end_char, InnerNode::Name, vec![]);
 
                 // assert body
                 if let None = iter.peek() {

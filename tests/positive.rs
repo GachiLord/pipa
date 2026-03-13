@@ -18,7 +18,7 @@ fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {
         }
     };
 
-    let ir = match gen_ir(&code, nodes) {
+    let ir = match gen_ir(&code, nodes.clone()) {
         Ok(ir) => ir,
         Err(e) => {
             e.write_message(f, filename, code).unwrap();
@@ -42,7 +42,7 @@ fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {
 
     // check the difference
     let out = String::from_utf8(out).expect(&format!("Output of '{}' is not utf8", filename));
-    assert_eq!(out, output, "{}", filename);    
+    assert_eq!(out, output, "{}\n{:#?}\n{:#?}", filename, &ir, nodes);
 }
 
 

@@ -116,66 +116,124 @@ pub fn is_name_array(name: &str) -> bool {
     name.chars().all(|v| v.is_uppercase())
 }
 
-/*
-fn is_node_pipe(ast: &Vec<Node>, mut index: usize) -> bool {
-    while let Some(n) = ast.get(index) {
-        match *n.inner {
-            InnerNode::Pipe => {
-                return true;
-            },
-            InnerNode::NewLine => {},
-            _ => break,
-        }
-        index += 1;
+fn in_scope(first_char: usize, name: &str, scope: &mut HashSet<Box<str>>) -> Result<(), CompileError> {
+    if !scope.contains(name) && is_name_reserved(&name) {
+        return Err(CompileError::new_undefined_var(first_char, name.to_string()));
     }
 
-    false
+    Ok(())
 }
-*/
 
-/*
-fn expect_string(ast: &Vec<Node>, mut index: usize) -> Result<(), CompileError> {
-    while let Some(n) = ast.get(index) {
-        match *n.inner {
-            InnerNode::String { .. } => {
-                return Ok(());
+fn gen_primitive_ir(code: &str, node: &Node, scope: &mut HashSet<Box<str>>, ops: &mut Vec<Op>) -> Result<(), CompileError> {
+    match *node.inner {
+        InnerNode::Literal { .. } => {
+            let value = node.as_escaped_string(code, &[TokenType::CodeBegin, TokenType::CodeEnd]).into();
+            ops.push(Op::PutStr { value });
+        },
+        InnerNode::Name { .. } => {
+            let name: Box<str> = node.as_str(code).into();
+
+            in_scope(node.first_char, &name, scope)?;
+
+            ops.push(Op::PutName { start: None, end: None, name });
+        },
+        InnerNode::Int { value } => {
+            ops.push(Op::PutStr { value: value.to_string().into() });
+        },
+        _ => unreachable!("{:#?}", node),
+    }
+
+    Ok(())
+}
+
+fn gen_string_ir(code: &str, children: &Vec<Node>, scope: &mut HashSet<Box<str>>, ops: &mut Vec<Op>) -> Result<(), CompileError> {
+    for n in children {
+        gen_primitive_ir(code, n, scope, ops)?;
+    }
+    ops.push(Op::Collapse);
+
+    Ok(())
+}
+
+fn gen_expr_ir(code: &str, mut node: Node, scope: &mut HashSet<Box<str>>, ops: &mut Vec<Op>) -> Result<(), CompileError> {
+
+    loop {
+        match *node.inner {
+            InnerNode::String { ref children } => {
+                gen_string_ir(code, children, scope, ops)?;
+            },
+            InnerNode::Name { .. } => {
+                gen_primitive_ir(code, &node, scope, ops)?;
             },
             InnerNode::Int { .. } => {
-                return Err(CompileError::new_type_error(n.first_char, Type::String, Type::Int));
+                gen_primitive_ir(code, &node, scope, ops)?;
             },
-            InnerNode::Range { .. } => {
-                return Err(CompileError::new_type_error(n.first_char, Type::String, Type::Array));
-            },
-            InnerNode::Array { .. } => {
-                return Err(CompileError::new_type_error(n.first_char, Type::String, Type::Array));
-            },
-            InnerNode::Literal => {
-                return Err(CompileError::new_type_error(n.first_char, Type::String, Type::Literal));
-            },
-            InnerNode::Name => {
-                return Err(CompileError::new_type_error(n.first_char, Type::String, Type::Name));
-            },
-            InnerNode::Pipe => {
-                return Err(CompileError::new_pipe_no_parent(n.first_char));
-            },
-            InnerNode::NewLine => {},
-            _ => {
-                unreachable!();
-            },
+            _ => unreachable!(),
         }
-        index += 1;
+
+        if let Some(child) = node.children.pop() {
+            scope.insert("_".into());
+            ops.push(Op::PutScopeVar{ name: "_".into() });
+
+            node = child;
+        } else {
+            break;
+        }
     }
 
-    Err(CompileError::new_syntax(ast[index - 1].first_char, &[TokenType::String]))
+    Ok(())
 }
-*/
 
-pub fn gen_ir(code: &str, mut ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
+pub fn gen_ir(code: &str, ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
     let mut ops = Vec::with_capacity(ast.len());
-    let mut i = 0;
-    // let mut array_start = None;
-    // let mut scope = HashSet::new();
+    let mut scope = HashSet::new();
+    let mut iter = ast.into_iter();
 
+    while let Some(mut node) = iter.next() {
+        match *node.inner {
+            InnerNode::Literal => {
+                gen_primitive_ir(code, &node, &mut scope, &mut ops)?;
+                ops.push(Op::Flush);
+            },
+            InnerNode::String { .. } | InnerNode::Int { .. } | InnerNode::Name { .. } => {
+                gen_expr_ir(code, node, &mut scope, &mut ops)?;
+                ops.push(Op::Flush);
+                ops.push(Op::DestroyScope);
+
+                scope.clear();
+            },
+            InnerNode::Array { name, start, end } => {
+                // handle name[:]
+                if !is_name_array(&name) {
+                    in_scope(node.first_char, &name, &mut scope)?;
+
+                    ops.push(Op::PutName { start, end, name });
+                    ops.push(Op::Flush);
+                    continue
+                }
+                // handle ARRAY[:]
+                ops.push(Op::SetCounter { value: start.unwrap_or(0) });
+                let op_index = ops.len();
+                ops.push(Op::CmpArrayEmptyJmp{ op_index, start, end, name: name.clone().into() });
+                ops.push(Op::LoadArrayItem { name: name.clone().into() });
+
+                ops.push(Op::PutScopeVar { name: "_item_".into() });
+                scope.insert("_item_".into());
+
+                ops.push(Op::LoadCounter);
+                ops.push(Op::PutScopeVar { name: "_index_".into() });
+                scope.insert("_index_".into());
+                
+                gen_expr_ir(code, node.children.pop().expect("Should be handled during syntax analysis"), &mut scope, &mut ops)?;
+                ops.push(Op::Flush);
+                ops.push(Op::DestroyScope);
+                scope.clear();
+
+                ops.push(Op::IncCounter);
+                ops.push(Op::CmpCounterLessJmp { name: name, value: end, op_index });
+            },
+        }
+    }
     /*
     while i < ast.len() {
         let node = &ast[i];

@@ -2,7 +2,7 @@
 
 ## Todo
 
-1. Use proper AST
+1. ~Use proper AST~
 1. Add optimizations before emmiting IR
 1. Add `include` directive(maybe with some multi-threading)
 1. CLI-interpreter

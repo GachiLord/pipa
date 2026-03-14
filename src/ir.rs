@@ -212,8 +212,8 @@ pub fn gen_ir(code: &str, ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
                 }
                 // handle ARRAY[:]
                 ops.push(Op::SetCounter { value: start.unwrap_or(0) });
-                let op_index = ops.len();
-                ops.push(Op::CmpArrayEmptyJmp{ op_index, start, end, name: name.clone().into() });
+                let op_index_begin = ops.len();
+                ops.push(Op::CmpArrayEmptyJmp{ op_index: 0, start, end, name: name.clone().into() });
                 ops.push(Op::LoadArrayItem { name: name.clone().into() });
 
                 ops.push(Op::PutScopeVar { name: "_item_".into() });
@@ -229,7 +229,14 @@ pub fn gen_ir(code: &str, ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
                 scope.clear();
 
                 ops.push(Op::IncCounter);
-                ops.push(Op::CmpCounterLessJmp { name: name, value: end, op_index });
+
+                let op_index_end = ops.len();
+                if let Op::CmpArrayEmptyJmp { op_index, .. } = &mut ops[op_index_begin] {
+                    *op_index = op_index_end;
+                }
+
+                ops.push(Op::CmpCounterLessJmp { name: name, value: end, op_index: op_index_begin });
+
             },
         }
     }

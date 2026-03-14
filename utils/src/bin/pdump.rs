@@ -24,7 +24,15 @@ fn main() {
         }
     };
 
+    let ir = match gen_ir(&code, nodes.clone()) {
+        Ok(ir) => ir,
+        Err(e) => {
+            e.write_message(&mut f, path, &code).unwrap();
+            panic!();
+        }
+    };
+
     println!("{}", code);
     println!("-------------------------------------------");
-    println!("{:#?}", nodes);
+    println!("{:#?}\n\n{:#?}", nodes, ir);
 }

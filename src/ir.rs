@@ -113,7 +113,7 @@ pub fn is_name_reserved(name: &str) -> bool {
 }
 
 pub fn is_name_array(name: &str) -> bool {
-    name.chars().all(|v| v.is_uppercase())
+    name.chars().all(|v| v.is_uppercase() || v == '_') && name.len() > 1
 }
 
 fn in_scope(first_char: usize, name: &str, scope: &mut HashSet<Box<str>>) -> Result<(), CompileError> {
@@ -130,12 +130,12 @@ fn gen_primitive_ir(code: &str, node: &Node, scope: &mut HashSet<Box<str>>, ops:
             let value = node.as_escaped_string(code, &[TokenType::CodeBegin, TokenType::CodeEnd]).into();
             ops.push(Op::PutStr { value });
         },
-        InnerNode::Name { .. } => {
+        InnerNode::Name { start, end } => {
             let name: Box<str> = node.as_str(code).into();
 
             in_scope(node.first_char, &name, scope)?;
 
-            ops.push(Op::PutName { start: None, end: None, name });
+            ops.push(Op::PutName { name, start, end });
         },
         InnerNode::Int { value } => {
             ops.push(Op::PutStr { value: value.to_string().into() });
@@ -202,15 +202,7 @@ pub fn gen_ir(code: &str, ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
                 scope.clear();
             },
             InnerNode::Array { name, start, end } => {
-                // handle name[:]
-                if !is_name_array(&name) {
-                    in_scope(node.first_char, &name, &mut scope)?;
 
-                    ops.push(Op::PutName { start, end, name });
-                    ops.push(Op::Flush);
-                    continue
-                }
-                // handle ARRAY[:]
                 ops.push(Op::SetCounter { value: start.unwrap_or(0) });
                 let op_index_begin = ops.len();
                 ops.push(Op::CmpArrayEmptyJmp{ op_index: 0, start, end, name: name.clone().into() });

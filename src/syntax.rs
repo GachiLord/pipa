@@ -118,7 +118,10 @@ pub enum InnerNode {
         end: Option<usize>,
     },
     Literal,
-    Name,
+    Name {
+        start: Option<usize>,
+        end: Option<usize>,
+    },
 }
 
 
@@ -469,7 +472,7 @@ fn parse_string(first_char: usize, end_char: usize, string: &str) -> Result<Node
                 expect_symbol(&mut iter, &[TokenType::ExprBegin], false)?;
                 expect_symbol(&mut iter, &[TokenType::Literal], false)?;
                 first_literal = find_boundary(i, &mut iter, TokenType::Literal, &[TokenType::ExprEnd])?;
-                nodes.push(Node::new(i + 2, first_literal, InnerNode::Name, vec![]));
+                nodes.push(Node::new(i + 2, first_literal, InnerNode::Name{ start: None, end: None }, vec![]));
                 first_literal += 1;
                 end_literal = first_literal;
             },
@@ -514,7 +517,11 @@ fn parse_array(parent: Node, child: Token, code: &str) -> Result<Node, CompileEr
         end = Some(token.parse::<usize>().unwrap());
     }
 
-    let n = Node::new(parent.first_char, child.end_char, InnerNode::Array { name: parent.as_str(code).into(), start, end }, vec![]);
+    let name: Box<str> = parent.as_str(code).into();
+    let n = match is_name_array(name.as_ref()) { 
+        true => Node::new(parent.first_char, parent.end_char, InnerNode::Array { name, start, end }, vec![]),
+        false => Node::new(parent.first_char, parent.end_char, InnerNode::Name { start, end }, vec![]),
+    };
 
     Ok(n)
 }
@@ -541,6 +548,14 @@ fn parse_expr<'a>(macro_table: &HashMap<Box<str>, Node>, mut parent: Node, iter:
                     },
                     TokenType::String => {
                         let s = parse_string(t.first_char, t.end_char, t.as_str(code))?;
+
+                        if !tail.children.is_empty() {
+                            tail = &mut tail.children[0];
+                            tail.children.push(s);
+                            tail = &mut tail.children[0];
+                            continue;
+                        }
+
                         tail.children.push(s);
                         tail = &mut tail.children[0];
                     },
@@ -553,9 +568,19 @@ fn parse_expr<'a>(macro_table: &HashMap<Box<str>, Node>, mut parent: Node, iter:
                     TokenType::MacroExp => {
                         let name: String = t.as_str(code).into();
                         let child = macro_table.get(&name.as_str()[1..]).ok_or_else(|| CompileError::new_undefined_macro(t.first_char, name))?;
-                        
+
+                        // append macro nodes into tail
                         tail.children.push(child.clone());
                         tail = &mut tail.children[0];
+                        // walk through the macro children to get tail
+                        loop {
+                            if tail.children.get(0).is_some() {
+                                tail = &mut tail.children[0];
+                            } else {
+                                break;
+                            }
+                        }
+
                     },
                     _ => {}
                 }
@@ -621,7 +646,7 @@ pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
                 nodes.push(int);
             },
             TokenType::Name => {
-                let mut parent = Node::new(t.first_char, t.end_char, InnerNode::Name, vec![]);
+                let mut parent = Node::new(t.first_char, t.end_char, InnerNode::Name{ start: None, end: None }, vec![]);
                 let is_arr = is_name_array(parent.as_str(code));
 
                 // handle arrays
@@ -667,7 +692,7 @@ pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
                 // It doesn't metter what node type we assing here,
                 // because it won't be used anyway. However parse_expr function requires some sort
                 // of a parent node to work, so we pass a Name there
-                let mut m = Node::new(t.first_char, t.end_char, InnerNode::Name, vec![]);
+                let mut m = Node::new(t.first_char, t.end_char, InnerNode::Name { start: None, end: None }, vec![]);
 
                 // assert body
                 if let None = iter.peek() {

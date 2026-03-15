@@ -28,6 +28,11 @@ fn main() {
         Ok(ir) => ir,
         Err(e) => {
             e.write_message(&mut f, path, &code).unwrap();
+
+            println!("{}", code);
+            println!("-------------------------------------------");
+            println!("{:#?}\n", nodes);
+
             panic!();
         }
     };

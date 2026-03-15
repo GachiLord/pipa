@@ -10,6 +10,10 @@ use utils::{VARS, ARRAYS};
 
 
 fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {
+    if filename == "examples/generated_24.pipa" {
+        println!();
+    }
+
     let nodes = match ast(&code) {
         Ok(n) => n,
         Err(e) => {

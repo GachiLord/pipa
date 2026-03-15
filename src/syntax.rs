@@ -560,7 +560,7 @@ fn parse_expr<'a>(macro_table: &HashMap<Box<str>, Node>, mut parent: Node, iter:
                     },
                     TokenType::MacroExp => {
                         let name: String = t.as_str(code).into();
-                        let child = macro_table.get(&name.as_str()[1..]).ok_or_else(|| CompileError::new_undefined_macro(t.first_char, name))?;
+                        let child = macro_table.get(&name.as_str()[1..]).ok_or_else(|| CompileError::new_undefined_macro(t.first_char, name[1..].into()))?;
 
                         // append macro nodes into tail
                         tail.children.push(child.clone());

@@ -549,13 +549,6 @@ fn parse_expr<'a>(macro_table: &HashMap<Box<str>, Node>, mut parent: Node, iter:
                     TokenType::String => {
                         let s = parse_string(t.first_char, t.end_char, t.as_str(code))?;
 
-                        if !tail.children.is_empty() {
-                            tail = &mut tail.children[0];
-                            tail.children.push(s);
-                            tail = &mut tail.children[0];
-                            continue;
-                        }
-
                         tail.children.push(s);
                         tail = &mut tail.children[0];
                     },

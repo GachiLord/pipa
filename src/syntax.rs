@@ -299,7 +299,7 @@ fn lex_code(first_char: usize, code: &str, tokens: &mut Vec<Token>) -> Result<()
     while let Some((is_escaping, i, t)) = iter.next() {
         match (is_escaping, t) {
             (false, "@") => {
-                let end = find_boundary(i, &mut iter, TokenType::Literal, &[TokenType::Space])?;
+                let end = find_boundary(i, &mut iter, &[TokenType::Literal], &[TokenType::Space])?;
                 tokens.push(Token::new(i, end, TokenType::MacroDef));
             },
             (false, "?") => {
@@ -350,7 +350,7 @@ fn lex_code(first_char: usize, code: &str, tokens: &mut Vec<Token>) -> Result<()
             },
             (false, "0") | (false, "1") | (false, "2") | (false, "3") | (false, "4") | 
                 (false, "5") | (false, "6") | (false, "7") | (false, "8") | (false, "9") => {
-                let end = find_boundary(i, &mut iter, TokenType::Int, &[TokenType::Space, TokenType::NewLine])?;
+                let end = find_boundary(i, &mut iter, &[TokenType::Int], &[TokenType::Space, TokenType::NewLine])?;
                 tokens.push(Token::new(i, end, TokenType::Int));
             },
             (false, "\n") | (false, "\r\n") => {
@@ -358,7 +358,7 @@ fn lex_code(first_char: usize, code: &str, tokens: &mut Vec<Token>) -> Result<()
             }
             (false, " ") | (false, "\t")  => {},
             (false, &_) => {
-                let end = find_boundary(i, &mut iter, TokenType::Literal, &[TokenType::Space, TokenType::NewLine, TokenType::RangeBegin])?;
+                let end = find_boundary(i, &mut iter, &[TokenType::Literal, TokenType::Int], &[TokenType::Space, TokenType::NewLine, TokenType::RangeBegin])?;
                 tokens.push(Token::new(i, end, TokenType::Name));
 
                 let token = code.get(i - first_char..end - first_char);
@@ -429,7 +429,7 @@ fn find_symbol<'a>(iter: &mut impl Iterator<Item = (bool, usize, &'a str)>, expe
     return Err(CompileError::new_syntax(c, expected));
 }
 
-fn find_boundary<'a>(first_char: usize, iter: &mut impl Iterator<Item = (bool, usize, &'a str)>, expected: TokenType, terminator: &[TokenType]) -> Result<usize, CompileError> 
+fn find_boundary<'a>(first_char: usize, iter: &mut impl Iterator<Item = (bool, usize, &'a str)>, expected: &[TokenType], terminator: &[TokenType]) -> Result<usize, CompileError> 
 {
     let mut c = first_char;
 
@@ -437,7 +437,7 @@ fn find_boundary<'a>(first_char: usize, iter: &mut impl Iterator<Item = (bool, u
         c = i;
         let t: TokenType = if is_escaping { TokenType::Literal } else { t.into() };
 
-        if t != expected {
+        if !expected.contains(&t) {
 
             for term in terminator {
                 if t == *term {
@@ -471,7 +471,7 @@ fn parse_string(first_char: usize, end_char: usize, string: &str) -> Result<Node
                 } 
                 expect_symbol(&mut iter, &[TokenType::ExprBegin], false)?;
                 expect_symbol(&mut iter, &[TokenType::Literal], false)?;
-                first_literal = find_boundary(i, &mut iter, TokenType::Literal, &[TokenType::ExprEnd])?;
+                first_literal = find_boundary(i, &mut iter, &[TokenType::Literal, TokenType::Int], &[TokenType::ExprEnd])?;
                 nodes.push(Node::new(i + 2, first_literal, InnerNode::Name{ start: None, end: None }, vec![]));
                 first_literal += 1;
                 end_literal = first_literal;
@@ -502,7 +502,7 @@ fn parse_array(parent: Node, child: Token, code: &str) -> Result<Node, CompileEr
 
     match expect_symbol(&mut iter, &[TokenType::Int], false) {
         Ok(_) => {
-            separator = find_boundary(0, &mut iter, TokenType::Int, &[TokenType::RangeSep])?;
+            separator = find_boundary(0, &mut iter, &[TokenType::Int], &[TokenType::RangeSep])?;
             let token = &range[1..separator - child.first_char];
             start = Some(token.parse::<usize>().unwrap());
         },
@@ -512,7 +512,7 @@ fn parse_array(parent: Node, child: Token, code: &str) -> Result<Node, CompileEr
     }
 
     if let Ok(_) = expect_symbol(&mut iter, &[TokenType::Int], false) {
-        let boundary = find_boundary(0, &mut iter, TokenType::Int, &[TokenType::RangeEnd])?;
+        let boundary = find_boundary(0, &mut iter, &[TokenType::Int], &[TokenType::RangeEnd])?;
         let token = &range[separator - child.first_char + 1..boundary - child.first_char];
         end = Some(token.parse::<usize>().unwrap());
     }

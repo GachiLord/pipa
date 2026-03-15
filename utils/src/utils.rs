@@ -10,6 +10,9 @@ pub static VARS: LazyLock<StringVars> = LazyLock::new(|| {
         ("first".into(), "first arg".into()),
         ("second".into(), "second arg".into()),
         ("third".into(), "third arg".into()),
+        // ASCII vars with int component
+        ("value_0".into(), "value 0".into()),
+        ("value_1".into(), "value 1".into()),
         // UTF-8 vars
         ("forth".into(), "четвертый аргумент".into()),
         // don't really know these languages :)
@@ -25,6 +28,9 @@ pub static ARRAYS: LazyLock<ArrayVars> = LazyLock::new(|| {
         // ASCII arrays
         ("ARGS".into(), vec!["first element".into(), "second element".into(), "third element".into()]),
         ("PHONES".into(), vec!["555-123-4567".into(), "555-987-6543".into(), "555-555-0000".into()]),
+        // ASCII arrays with int component
+        ("ARGS0".into(), vec!["first element".into(), "second element".into(), "third element".into()]),
+        ("ARGS_0".into(), vec!["first element".into(), "second element".into(), "third element".into()]),
         // UTF-8 arrays
         ("UTF".into(), vec!["первый".into(), "segunda".into(), "三番目".into()]),
     ])

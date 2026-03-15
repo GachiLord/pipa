@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>This is a title </title>
+  </head>
+  <body>
+    <div>
+        <p>{{ value_0 }}</p>
+        <p>{{ value_1 }}</p>
+    </div>
+  </body>
+</html>

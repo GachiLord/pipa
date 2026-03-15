@@ -113,7 +113,11 @@ pub fn is_name_reserved(name: &str) -> bool {
 }
 
 pub fn is_name_array(name: &str) -> bool {
-    name.chars().all(|v| v.is_uppercase() || v == '_') && name.len() > 1
+    name.chars().all(|v| {
+        let is_int = matches!(v, '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9');
+
+        v.is_uppercase() || is_int || v == '_' 
+    }) && name.len() > 1
 }
 
 fn in_scope(first_char: usize, name: &str, scope: &mut HashSet<Box<str>>) -> Result<(), CompileError> {

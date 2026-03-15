@@ -1,0 +1,6 @@
+{{
+  @exclaim "$(_)!"
+  @emphasize "<em>$(_)</em>"
+  "hello" | ?exclaim | ?emphasize
+  first | ?exclaim | ?emphasize
+}}

@@ -1,0 +1,1 @@
+{{ ARGS[:] | "Index $(_index_): $(_item_)" }}

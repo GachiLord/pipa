@@ -1,0 +1,4 @@
+{{
+  @ignore "This macro ignores its input: \{\}"
+  "anything" | ?ignore
+}}

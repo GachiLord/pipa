@@ -1,0 +1,6 @@
+<ul>
+  {{
+    @list_item "<li id='item-$(_index_)'>$(_item_)</li>"
+    ARGS[:] | ?list_item
+  }}
+</ul>

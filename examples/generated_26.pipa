@@ -1,0 +1,4 @@
+{{
+  @paren "($(_))"
+  "hello" | ?paren
+}}

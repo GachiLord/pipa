@@ -1,0 +1,6 @@
+<footer>
+  {{
+    @copyright "&copy; 2026 My Company"
+    ?copyright
+  }}
+</footer>

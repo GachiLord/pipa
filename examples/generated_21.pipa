@@ -1,0 +1,4 @@
+{{
+  @display "Displaying: \{$(_item_)\}"
+  ARGS[:] | ?display
+}}

@@ -1,0 +1,4 @@
+{{
+  @process "$(_item_)" | "processed: \{$(_)\}"
+  ARGS[:] | ?process
+}}

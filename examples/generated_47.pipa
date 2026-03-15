@@ -1,0 +1,7 @@
+<p>
+  {{
+    @shout "$(_)!" 
+    "hello" | ?shout | "<h1>$(_)</h1>"
+    first | ?shout | "<p>$(_)</p>"
+  }}
+</p>

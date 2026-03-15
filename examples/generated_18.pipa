@@ -1,0 +1,6 @@
+<p>
+  {{
+    "Hello" | "$(_) world" | "<strong>$(_)</strong>"
+    42 | "The answer is $(_)"
+  }}
+</p>

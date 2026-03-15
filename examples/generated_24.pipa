@@ -1,0 +1,7 @@
+<div>
+  {{
+    @upper "$(_item_)" | "$(_)!"
+    @em "<em>$(_)</em>"
+    ARGS[:] | ?upper | ?em
+  }}
+</div>

@@ -1,0 +1,4 @@
+{{
+  @example "$(_item_)" | "final: $(_)"
+  ARGS[:] | ?example
+}}

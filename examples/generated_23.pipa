@@ -1,0 +1,6 @@
+{{
+  @foo "foo: $(_item_)"
+  @bar "bar: $(_item_)"
+  ARGS[:] | ?foo
+  ARGS[:] | ?bar
+}}

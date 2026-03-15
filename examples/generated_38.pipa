@@ -1,0 +1,6 @@
+{{
+  @bold "<b>$(_item_)</b>"
+  @italic "<i>$(_item_)</i>"
+  ARGS[:] | ?bold
+  ARGS[:] | ?italic
+}}

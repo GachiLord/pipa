@@ -1,0 +1,4 @@
+{{
+  @identity "$(_)"
+  123 | ?identity
+}}

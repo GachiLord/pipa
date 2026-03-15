@@ -1,0 +1,4 @@
+{{
+  @withbraces "Value: \{$(_)\}"
+  "test" | ?withbraces
+}}

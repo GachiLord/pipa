@@ -1,0 +1,7 @@
+{{
+  # This is a comment
+  "start"
+  # Another comment
+  100 | "value: $(_)"
+  ARGS[:] | "array item: $(_item_)"
+}}

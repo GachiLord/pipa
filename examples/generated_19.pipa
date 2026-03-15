@@ -1,0 +1,6 @@
+<ul>
+  {{
+    @wrap_with_index "$(_index_) - $(_item_)"
+    PHONES[:] | ?wrap_with_index | "<li>$(_)</li>"
+  }}
+</ul>

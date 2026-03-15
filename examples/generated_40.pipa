@@ -1,0 +1,4 @@
+{{
+  @display "($(_index_)) $(_item_)"
+  ARGS[:] | ?display | "<div>$(_)</div>"
+}}

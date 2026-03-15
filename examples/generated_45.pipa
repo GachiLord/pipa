@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello Page</title>
+  </head>
+  <body>
+    <p>{{ first }}</p>
+    <p>{{ "Welcome, $(first) $(second)!" }}</p>
+  </body>
+</html>

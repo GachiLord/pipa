@@ -1,0 +1,1 @@
+{{ first[0:3] | "First three: $(_)" }}

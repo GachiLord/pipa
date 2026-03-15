@@ -1,0 +1,4 @@
+{{
+  @wrap "<span>$(_item_)</span>"
+  ARGS[0:2] | ?wrap
+}}

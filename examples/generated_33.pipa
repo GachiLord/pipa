@@ -1,0 +1,1 @@
+{{ ARGS[:] | "Item: $(_item_)" | "Result: $(_)" }}

@@ -1,0 +1,4 @@
+{{
+  @numbered "($(_index_))"
+  ARGS[:] | ?numbered
+}}

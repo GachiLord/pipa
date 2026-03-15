@@ -1,0 +1,4 @@
+{{
+  @braced "Braced content: \{$(_item_)\}"
+  ARGS[:] | ?braced
+}}

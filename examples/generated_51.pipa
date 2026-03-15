@@ -1,0 +1,5 @@
+{{
+  @addBang "$(_)!"
+  @addStar "*$(_)*"
+  "hello" | ?addBang | ?addStar
+}}

@@ -1,0 +1,4 @@
+{{
+  @upper "$(_item_)" | "UPPER: $(_)"
+  ARGS[:] | ?upper | "<li>$(_)</li>"
+}}

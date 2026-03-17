@@ -457,7 +457,7 @@ fn parse_int(t: Token, code: &str) -> Node {
     Node::new(t.first_char, t.end_char, InnerNode::Int { value }, vec![])
 }
 
-fn parse_string(first_char: usize, end_char: usize, string: &str) -> Result<Node, CompileError> {
+fn parse_string(first_char: usize, end_char: usize, string: &str, code: &str) -> Result<Node, CompileError> {
     let mut first_literal = first_char + 1;
     let mut end_literal = 0;
     let mut nodes = vec![];
@@ -468,11 +468,17 @@ fn parse_string(first_char: usize, end_char: usize, string: &str) -> Result<Node
             (false, "$") => {
                 if i - first_literal != 0 {
                     nodes.push(Node::new(first_literal, i, InnerNode::Literal, vec![]));
-                } 
+                }
                 expect_symbol(&mut iter, &[TokenType::ExprBegin], false)?;
                 expect_symbol(&mut iter, &[TokenType::Literal], false)?;
                 first_literal = find_boundary(i, &mut iter, &[TokenType::Literal, TokenType::Int], &[TokenType::ExprEnd])?;
-                nodes.push(Node::new(i + 2, first_literal, InnerNode::Name{ start: None, end: None }, vec![]));
+                let node = Node::new(i + 2, first_literal, InnerNode::Name{ start: None, end: None }, vec![]);
+                // check if name is correct
+                if is_name_array(node.as_str(code)) {
+                    return Err(CompileError::new_name(node.first_char));
+                }
+                // save node
+                nodes.push(node);
                 first_literal += 1;
                 end_literal = first_literal;
             },
@@ -547,7 +553,7 @@ fn parse_expr<'a>(macro_table: &HashMap<Box<str>, Node>, mut parent: Node, iter:
                         return Err(CompileError::new_syntax(tail.first_char, &[TokenType::String]))
                     },
                     TokenType::String => {
-                        let s = parse_string(t.first_char, t.end_char, t.as_str(code))?;
+                        let s = parse_string(t.first_char, t.end_char, t.as_str(code), code)?;
 
                         tail.children.push(s);
                         tail = &mut tail.children[0];
@@ -672,7 +678,7 @@ pub fn ast(code: &str) -> Result<Vec<Node>, CompileError> {
                 return Err(CompileError::new_pipe_no_parent(t.first_char));
             },
             TokenType::String => {
-                let mut s = parse_string(t.first_char, t.end_char, t.as_str(code))?;
+                let mut s = parse_string(t.first_char, t.end_char, t.as_str(code), code)?;
                 if has_expr(&mut iter) {
                     s = parse_expr(&macro_table, s, &mut iter, code)?;
                 }

@@ -36,6 +36,11 @@ fn invalid_name() {
     assert_eq!(err_reason(test_file("negative_examples/invalid_name.pipa")), ErrorReason::NameError);
 }
 
+#[test]
+fn array_names_in_strings() {
+    assert_eq!(err_reason(test_file("negative_examples/array_names_in_strings.pipa")), ErrorReason::NameError);
+}
+
 // pipes
 
 #[test]

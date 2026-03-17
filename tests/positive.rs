@@ -70,3 +70,67 @@ fn positive_snippets() {
     }
     
 }
+
+// property testing
+
+#[test]
+fn unused_macro_produce_nothing() {
+    let mut stdout = stdout().lock();
+    let code = "{{ @add_hello \"value not used\" }}";
+
+    test_str(&mut stdout, "*.pipa", code, "");
+}
+
+
+#[test]
+fn pipe_into_empty_string_produce_nothing() {
+    let mut stdout = stdout().lock();
+    let code = "{{ 42 | \"$(_) - super value\" | \"$(_) - lets do more\" | \"\" }}";
+
+    test_str(&mut stdout, "*.pipa", code, "");
+}
+
+
+#[test]
+fn pipe_of_value_produce_value() {
+    let mut stdout = stdout().lock();
+    let code = "{{ \"😃\" | \"$(_)\" }}";
+
+    test_str(&mut stdout, "*.pipa", code, "😃");
+}
+
+
+#[test]
+fn multi_pipe_of_value_produce_value() {
+    let mut stdout = stdout().lock();
+    let code = "{{ \"😃\" | \"$(_)\" | \"$(_)\" | \"$(_)\" | \"$(_)\" | \"$(_)\" }}";
+
+    test_str(&mut stdout, "*.pipa", code, "😃");
+}
+
+
+#[test]
+fn empty_range_should_produce_nothing() {
+    let mut stdout = stdout().lock();
+    let code = "{{ PHONES[0:0] | \"$(_item_)$(_index_)\" }}";
+
+    test_str(&mut stdout, "*.pipa", code, "");
+}
+
+
+#[test]
+fn comments_should_produce_nothing() {
+    let mut stdout = stdout().lock();
+    let code = "{{ # PHONES[:] | \"$(_item_)$(_index_)\" }}";
+
+    test_str(&mut stdout, "*.pipa", code, "");
+}
+
+
+#[test]
+fn multi_empty_lines_produce_nothing() {
+    let mut stdout = stdout().lock();
+    let code = "{{ \"\" \"\" \"\" \"\" \"\" \"\" \"\" \"\" }}";
+
+    test_str(&mut stdout, "*.pipa", code, "");
+}

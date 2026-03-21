@@ -1,8 +1,10 @@
+use std::mem;
 use crate::syntax::{InnerNode, Node};
 
 pub const NO_OPT: OptOptions = OptOptions{ string_evaluation: false };
+pub const FULL_OPT: OptOptions = OptOptions{ string_evaluation: true };
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct OptOptions {
     pub string_evaluation: bool,
     // TODO Flush batching
@@ -10,9 +12,15 @@ pub struct OptOptions {
     // TODO Deadcode elimination
 }
 
-pub fn evaluate_expr(parent: Node, code: &str) -> Node {
+pub fn evaluate_expr(parent: Node, code: &str) -> Option<Node> {
     if parent.children.is_empty() {
-        return parent;
+        if let InnerNode::String { ref children } = *parent.inner {
+            if children.len() == 0 {
+                return None;
+            }
+        }
+
+        return Some(parent);
     }
 
     let mut tail = parent;
@@ -46,7 +54,11 @@ pub fn evaluate_expr(parent: Node, code: &str) -> Node {
                         },
                         InnerNode::Name { .. } => {
                             if child.as_str(code) == "_" {
-                                child_expr.append(&mut parent_expr);
+                                // we need to copy because there can be more than one '_'
+                                // Example: 69 | "$(_)     $(_)"
+                                child_expr.extend_from_slice(&parent_expr[..]);
+                            } else {
+                                child_expr.push(child);
                             }
                         },
                         InnerNode::String { .. } | InnerNode::Int { .. } | InnerNode::Array { .. } => {
@@ -55,7 +67,8 @@ pub fn evaluate_expr(parent: Node, code: &str) -> Node {
                     }
                 }
 
-                std::mem::swap(&mut child_expr, &mut parent_expr);
+                parent_expr.clear();
+                mem::swap(&mut child_expr, &mut parent_expr);
 
                 match tail.children.pop() {
                     Some(child) => {
@@ -72,7 +85,16 @@ pub fn evaluate_expr(parent: Node, code: &str) -> Node {
         }
     }
 
-    Node::new(parent_expr[0].first_char, parent_expr[0].end_char, InnerNode::String {children: parent_expr}, Vec::new())
+    if parent_expr.len() == 0 {
+        return None;
+    }
+
+    Some(Node::new(
+            parent_expr[0].first_char,
+            parent_expr[0].end_char,
+            InnerNode::String {children: parent_expr},
+            Vec::new())
+        )
 }
 
 mod test {
@@ -86,7 +108,7 @@ mod test {
 
         let evaluated = evaluate_expr(nodes[0].clone(), code);
 
-        assert_eq!(nodes[0], evaluated);
+        assert_eq!(None, evaluated);
     }
 
     #[test]
@@ -94,7 +116,7 @@ mod test {
         let code = "{{ \"value\" | \"$(_)\" }}";
         let nodes = ast(&code).unwrap();
 
-        let evaluated = Some(evaluate_expr(nodes[0].clone(), code));
+        let evaluated = evaluate_expr(nodes[0].clone(), code);
         let mut expected = None;
 
         if let InnerNode::String { ref children } = *nodes[0].inner {
@@ -119,7 +141,7 @@ mod test {
         let code = "{{ \"$(first)value$(second)\" | \"$(_)\" }}";
         let nodes = ast(&code).unwrap();
 
-        let evaluated = Some(evaluate_expr(nodes[0].clone(), code));
+        let evaluated = evaluate_expr(nodes[0].clone(), code);
         let mut expected = None;
 
         if let InnerNode::String { ref children } = *nodes[0].inner {
@@ -143,7 +165,7 @@ mod test {
         let code = "{{ 69 | \"$(_)\" }}";
         let nodes = ast(&code).unwrap();
 
-        let evaluated = Some(evaluate_expr(nodes[0].clone(), code));
+        let evaluated = evaluate_expr(nodes[0].clone(), code);
         let mut expected = None;
 
         if let InnerNode::Int { value } = *nodes[0].inner {
@@ -168,7 +190,7 @@ mod test {
         let code = "{{ first | \"$(_)\" }}";
         let nodes = ast(&code).unwrap();
 
-        let evaluated = Some(evaluate_expr(nodes[0].clone(), code));
+        let evaluated = evaluate_expr(nodes[0].clone(), code);
         let mut expected = None;
 
         if let InnerNode::Name { start, end } = *nodes[0].inner {

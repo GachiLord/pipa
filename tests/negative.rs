@@ -4,13 +4,26 @@ use std::fs::{read_to_string};
 use pipa::ir::gen_ir;
 use pipa::syntax::{ast, TokenType};
 use pipa::error::{CompileError, ErrorReason};
-use pipa::analysis::OptOptions;
+use pipa::analysis::{NO_OPT, FULL_OPT};
 use utils::err_reason;
 
 fn test_str(code: &str) -> Result<(), CompileError> {
     let nodes = ast(code)?;
 
-    let _ = gen_ir(code, nodes, OptOptions::default())?;
+    let c1 = gen_ir(code, nodes.clone(), NO_OPT);
+    let c2 = gen_ir(code, nodes, FULL_OPT);
+
+    assert_eq!(c1.is_err(), c2.is_err());
+
+    match (&c1, &c2) {
+        (Err(e1), Err(e2)) => {
+            assert_eq!(e1, e2);
+        },
+        _ => {}
+    }
+
+    c1?;
+
     Ok(())
 }
 

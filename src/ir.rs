@@ -202,7 +202,13 @@ pub fn gen_ir(code: &str, ast: Vec<Node>, opt: OptOptions) -> Result<Vec<Op>, Co
             },
             InnerNode::String { .. } | InnerNode::Int { .. } | InnerNode::Name { .. } => {
                 if opt.string_evaluation {
-                    node = evaluate_expr(node, code);
+                    match evaluate_expr(node, code) {
+                        Some(n) => node = n,
+                        None => {
+                            scope.clear();
+                            continue;
+                        }
+                    }
                 }
 
                 gen_expr_ir(code, node, &mut scope, &mut ops)?;
@@ -211,6 +217,22 @@ pub fn gen_ir(code: &str, ast: Vec<Node>, opt: OptOptions) -> Result<Vec<Op>, Co
                 scope.clear();
             },
             InnerNode::Array { name, start, end } => {
+                let child = match opt.string_evaluation {
+                    true => {
+                        let node = evaluate_expr(node.children.pop().expect("Should be handled during syntax analysis"), code);
+
+                        match node {
+                            Some(n) => n,
+                            None => {
+                                scope.clear();
+                                continue;
+                            }
+                        }
+                    },
+                    false => {
+                        node.children.pop().expect("Should be handled during syntax analysis")
+                    }
+                };
 
                 ops.push(Op::SetCounter { value: start.unwrap_or(0) });
                 let op_index_begin = ops.len();
@@ -224,13 +246,7 @@ pub fn gen_ir(code: &str, ast: Vec<Node>, opt: OptOptions) -> Result<Vec<Op>, Co
                 ops.push(Op::PutScopeVar { name: "_index_".into() });
                 scope.insert("_index_".into());
 
-
-                if opt.string_evaluation {
-                    let node = evaluate_expr(node.children.pop().expect("Should be handled during syntax analysis"), code);
-                    gen_expr_ir(code, node, &mut scope, &mut ops)?;
-                } else {
-                    gen_expr_ir(code, node.children.pop().expect("Should be handled during syntax analysis"), &mut scope, &mut ops)?;
-                }
+                gen_expr_ir(code, child, &mut scope, &mut ops)?;
 
                 ops.push(Op::Flush);
                 ops.push(Op::DestroyScope);

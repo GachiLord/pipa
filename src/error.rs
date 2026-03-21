@@ -31,7 +31,7 @@ pub enum ErrorReason {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct CompileError {
     pub first_char: usize,
     pub reason: ErrorReason,

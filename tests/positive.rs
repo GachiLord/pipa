@@ -5,15 +5,12 @@ use std::fs::{read_to_string, read_dir};
 use pipa::ir::gen_ir;
 use pipa::syntax::ast;
 use pipa::vm::Vm;
-use pipa::analysis::OptOptions;
+use pipa::analysis::{NO_OPT, FULL_OPT};
 use std::env;
 use utils::{VARS, ARRAYS};
 
 
 fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {
-    if filename == "examples/generated_24.pipa" {
-        println!();
-    }
 
     let nodes = match ast(&code) {
         Ok(n) => n,
@@ -23,7 +20,7 @@ fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {
         }
     };
 
-    let ir = match gen_ir(&code, nodes.clone(), OptOptions::default()) {
+    let ir = match gen_ir(&code, nodes.clone(), NO_OPT) {
         Ok(ir) => ir,
         Err(e) => {
             e.write_message(f, filename, code).unwrap();
@@ -45,9 +42,31 @@ fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {
         },
     }
 
-    // check the difference
-    let out = String::from_utf8(out).expect(&format!("Output of '{}' is not utf8", filename));
-    assert_eq!(out, output, "{}\n{:#?}\n{:#?}", filename, &ir, nodes);
+    // check diff with no optimizations
+    let out_s = String::from_utf8(out).expect(&format!("Output of '{}' is not utf8", filename));
+    assert_eq!(out_s, output, "{}\n{:#?}\n{:#?}\n{:#?}", filename, &ir, nodes, NO_OPT);
+    // check diff with full optimizations
+    let ir_opt = match gen_ir(&code, nodes.clone(), FULL_OPT) {
+        Ok(ir) => ir,
+        Err(e) => {
+            e.write_message(f, filename, code).unwrap();
+            panic!();
+        },
+    };
+
+    
+    let mut out = Vec::new();
+    let mut vm = Vm::new(VARS.clone(), ARRAYS.clone());
+
+    match vm.run(&mut out, &ir_opt) {
+        Ok(_) => {},
+        Err(e) => {
+            panic!("Failed to run '{}' {:?}", filename, e);
+        },
+    }
+
+    let out_s = String::from_utf8(out).expect(&format!("Output of '{}' is not utf8", filename));
+    assert_eq!(out_s, output, "{}\n{:#?}\n{:#?}\n{:#?}", filename, &ir_opt, nodes, FULL_OPT);
 }
 
 

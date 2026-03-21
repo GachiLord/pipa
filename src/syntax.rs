@@ -134,7 +134,7 @@ pub struct Node {
 }
 
 impl Node {
-    fn new(first_char: usize, end_char: usize, inner: InnerNode, children: Vec<Node>) -> Self {
+    pub fn new(first_char: usize, end_char: usize, inner: InnerNode, children: Vec<Node>) -> Self {
         Node {
             first_char,
             end_char,

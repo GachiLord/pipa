@@ -5,6 +5,7 @@ use std::fs::{read_to_string, read_dir};
 use pipa::ir::gen_ir;
 use pipa::syntax::ast;
 use pipa::vm::Vm;
+use pipa::analysis::OptOptions;
 use std::env;
 use utils::{VARS, ARRAYS};
 
@@ -22,7 +23,7 @@ fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {
         }
     };
 
-    let ir = match gen_ir(&code, nodes.clone()) {
+    let ir = match gen_ir(&code, nodes.clone(), OptOptions::default()) {
         Ok(ir) => ir,
         Err(e) => {
             e.write_message(f, filename, code).unwrap();

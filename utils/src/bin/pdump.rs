@@ -5,6 +5,7 @@ include!("../utils.rs");
 use pipa::vm::Vm;
 use pipa::syntax::{Node, TokenType, ast};
 use pipa::ir::{Op, gen_ir, dump_ir};
+use pipa::analysis::NO_OPT;
 use std::fs::{exists, read_to_string, read_dir, write};
 use std::io::stdout;
 use std::env;
@@ -24,7 +25,7 @@ fn main() {
         }
     };
 
-    let ir = match gen_ir(&code, nodes.clone()) {
+    let ir = match gen_ir(&code, nodes.clone(), NO_OPT) {
         Ok(ir) => ir,
         Err(e) => {
             e.write_message(&mut f, path, &code).unwrap();

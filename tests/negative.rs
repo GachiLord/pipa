@@ -4,12 +4,13 @@ use std::fs::{read_to_string};
 use pipa::ir::gen_ir;
 use pipa::syntax::{ast, TokenType};
 use pipa::error::{CompileError, ErrorReason};
+use pipa::analysis::OptOptions;
 use utils::err_reason;
 
 fn test_str(code: &str) -> Result<(), CompileError> {
     let nodes = ast(code)?;
 
-    let _ = gen_ir(code, nodes)?;
+    let _ = gen_ir(code, nodes, OptOptions::default())?;
     Ok(())
 }
 

@@ -1,5 +1,15 @@
 use crate::syntax::{InnerNode, Node};
 
+pub const NO_OPT: OptOptions = OptOptions{ string_evaluation: false };
+
+#[derive(Clone, Copy, Default)]
+pub struct OptOptions {
+    pub string_evaluation: bool,
+    // TODO Flush batching
+    // TODO PutScopeVar
+    // TODO Deadcode elimination
+}
+
 pub fn evaluate_expr(parent: Node, code: &str) -> Node {
     if parent.children.is_empty() {
         return parent;
@@ -67,7 +77,7 @@ pub fn evaluate_expr(parent: Node, code: &str) -> Node {
 
 mod test {
     use crate::syntax::{ast, InnerNode, Node};
-    use crate::analysis::evaluate_expr;
+    use crate::analysis::{evaluate_expr};
 
     #[test]
     fn empty_string_evaluation() {
@@ -78,7 +88,6 @@ mod test {
 
         assert_eq!(nodes[0], evaluated);
     }
-
 
     #[test]
     fn string_pipe_evaluation() {

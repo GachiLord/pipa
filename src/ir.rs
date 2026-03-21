@@ -3,6 +3,7 @@ use std::collections::{HashSet};
 use std::io::Write;
 use crate::syntax::{Node, TokenType, InnerNode};
 use crate::error::CompileError;
+use crate::analysis::{evaluate_expr, OptOptions};
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Op {
@@ -188,9 +189,9 @@ fn gen_expr_ir(code: &str, mut node: Node, scope: &mut HashSet<Box<str>>, ops: &
     Ok(())
 }
 
-pub fn gen_ir(code: &str, ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
-    let mut ops = Vec::with_capacity(ast.len());
+pub fn gen_ir(code: &str, ast: Vec<Node>, opt: OptOptions) -> Result<Vec<Op>, CompileError> {
     let mut scope = HashSet::new();
+    let mut ops = Vec::with_capacity(ast.len());
     let mut iter = ast.into_iter();
 
     while let Some(mut node) = iter.next() {
@@ -200,6 +201,10 @@ pub fn gen_ir(code: &str, ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
                 ops.push(Op::Flush);
             },
             InnerNode::String { .. } | InnerNode::Int { .. } | InnerNode::Name { .. } => {
+                if opt.string_evaluation {
+                    node = evaluate_expr(node, code);
+                }
+
                 gen_expr_ir(code, node, &mut scope, &mut ops)?;
                 ops.push(Op::Flush);
 
@@ -218,8 +223,15 @@ pub fn gen_ir(code: &str, ast: Vec<Node>) -> Result<Vec<Op>, CompileError> {
                 ops.push(Op::LoadCounter);
                 ops.push(Op::PutScopeVar { name: "_index_".into() });
                 scope.insert("_index_".into());
-                
-                gen_expr_ir(code, node.children.pop().expect("Should be handled during syntax analysis"), &mut scope, &mut ops)?;
+
+
+                if opt.string_evaluation {
+                    let node = evaluate_expr(node.children.pop().expect("Should be handled during syntax analysis"), code);
+                    gen_expr_ir(code, node, &mut scope, &mut ops)?;
+                } else {
+                    gen_expr_ir(code, node.children.pop().expect("Should be handled during syntax analysis"), &mut scope, &mut ops)?;
+                }
+
                 ops.push(Op::Flush);
                 ops.push(Op::DestroyScope);
                 scope.clear();

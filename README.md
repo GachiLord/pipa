@@ -10,7 +10,7 @@
 
         Output: `"<li>$(_index_): $(_item_)</li>"`
 
-    * Batching of Flush op
+    * ~Batching of Flush op~
 
         Input:    
         `PutStr`  

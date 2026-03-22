@@ -3,7 +3,7 @@ use std::collections::{HashSet};
 use std::io::Write;
 use crate::syntax::{Node, TokenType, InnerNode};
 use crate::error::CompileError;
-use crate::analysis::{evaluate_expr, OptOptions};
+use crate::analysis::{evaluate_expr, unique_constants_expr, OptOptions};
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Op {
@@ -263,14 +263,48 @@ pub fn gen_ir(code: &str, ast: Vec<Node>, opt: OptOptions) -> Result<Vec<Op>, Co
                 // prepare state for current iteration
                 let op_index_begin = ops.len();
                 ops.push(Op::CmpArrayEmptyJmp{ op_index: 0, start, end, name: name.clone().into() });
-                ops.push(Op::LoadArrayItem { name: name.clone().into() });
                 // load constants
-                ops.push(Op::PutScopeVar { name: "_item_".into() });
-                scope.insert("_item_".into());
+                if opt.constant_evaluation {
+                    // try using evaluted string, fallback to generating new one
+                    let constants = match opt.string_evaluation {
+                        true => unique_constants_expr(&child, code),
+                        // slow path
+                        false => {
+                            let node = match evaluate_expr(child.clone(), code) {
+                                Some(n) => n,
+                                None => {
+                                    scope.clear();
+                                    continue;
+                                }
+                            };
 
-                ops.push(Op::LoadCounter);
-                ops.push(Op::PutScopeVar { name: "_index_".into() });
-                scope.insert("_index_".into());
+                            unique_constants_expr(&node, code)
+                        },
+                    };
+
+                    // don't load unused constants
+                    if constants.contains("_item_") {
+                        ops.push(Op::LoadArrayItem { name: name.clone().into() });
+                        ops.push(Op::PutScopeVar { name: "_item_".into() });
+                        scope.insert("_item_".into());
+                    }
+
+                    if constants.contains("_index_") {
+                        ops.push(Op::LoadCounter);
+                        ops.push(Op::PutScopeVar { name: "_index_".into() });
+                        scope.insert("_index_".into());
+                    }
+
+                } else {
+                    // no optimizations
+                    ops.push(Op::LoadArrayItem { name: name.clone().into() });
+                    ops.push(Op::PutScopeVar { name: "_item_".into() });
+                    scope.insert("_item_".into());
+
+                    ops.push(Op::LoadCounter);
+                    ops.push(Op::PutScopeVar { name: "_index_".into() });
+                    scope.insert("_index_".into());
+                }
 
                 // loop body
                 gen_expr_ir(code, child, &mut scope, &mut ops)?;

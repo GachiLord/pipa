@@ -1,15 +1,34 @@
 use std::mem;
+use std::collections::HashSet;
 use crate::syntax::{InnerNode, Node};
 
-pub const NO_OPT: OptOptions = OptOptions{ string_evaluation: false };
-pub const FULL_OPT: OptOptions = OptOptions{ string_evaluation: true };
+pub const NO_OPT: OptOptions = OptOptions{ string_evaluation: false, constant_evaluation: false };
+pub const FULL_OPT: OptOptions = OptOptions{ string_evaluation: true, constant_evaluation: true };
 
 #[derive(Clone, Copy, Default, Debug)]
 pub struct OptOptions {
     pub string_evaluation: bool,
-    // TODO Flush batching
-    // TODO PutScopeVar
+    pub constant_evaluation: bool,
     // TODO Deadcode elimination
+}
+
+pub fn unique_constants_expr<'a>(parent: &Node, code: &'a str) -> HashSet<&'a str> {
+    let mut tail = parent;
+    let mut constants = HashSet::new();
+
+    if let InnerNode::String { ref children } = *parent.inner {
+
+        for child in children {
+            if let InnerNode::Name { .. } = *child.inner {
+                constants.insert(child.as_str(code));
+            }
+        }
+
+    } else {
+        panic!("This functions must be used only with evaluated strings. Got: {:#?}", parent);
+    }
+
+    constants
 }
 
 pub fn evaluate_expr(parent: Node, code: &str) -> Option<Node> {
@@ -98,8 +117,9 @@ pub fn evaluate_expr(parent: Node, code: &str) -> Option<Node> {
 }
 
 mod test {
+    use std::collections::HashSet;
     use crate::syntax::{ast, InnerNode, Node};
-    use crate::analysis::{evaluate_expr};
+    use crate::analysis::{evaluate_expr, unique_constants_expr};
 
     #[test]
     fn empty_string_evaluation() {
@@ -107,8 +127,10 @@ mod test {
         let nodes = ast(&code).unwrap();
 
         let evaluated = evaluate_expr(nodes[0].clone(), code);
+        let evaluated_const = unique_constants_expr(&nodes[0], code);
 
         assert_eq!(None, evaluated);
+        assert_eq!(evaluated_const, HashSet::new());
     }
 
     #[test]
@@ -117,6 +139,7 @@ mod test {
         let nodes = ast(&code).unwrap();
 
         let evaluated = evaluate_expr(nodes[0].clone(), code);
+        let evaluated_const = unique_constants_expr(evaluated.as_ref().unwrap(), code);
         let mut expected = None;
 
         if let InnerNode::String { ref children } = *nodes[0].inner {
@@ -132,6 +155,7 @@ mod test {
         }
 
         assert_eq!(expected, evaluated);
+        assert_eq!(evaluated_const, HashSet::new());
     }
 
 
@@ -142,6 +166,7 @@ mod test {
         let nodes = ast(&code).unwrap();
 
         let evaluated = evaluate_expr(nodes[0].clone(), code);
+        let evaluated_const = unique_constants_expr(evaluated.as_ref().unwrap(), code);
         let mut expected = None;
 
         if let InnerNode::String { ref children } = *nodes[0].inner {
@@ -157,6 +182,7 @@ mod test {
         }
 
         assert_eq!(expected, evaluated);
+        assert_eq!(evaluated_const, HashSet::from(["first", "second"]));
     }
 
 
@@ -166,6 +192,7 @@ mod test {
         let nodes = ast(&code).unwrap();
 
         let evaluated = evaluate_expr(nodes[0].clone(), code);
+        let evaluated_const = unique_constants_expr(evaluated.as_ref().unwrap(), code);
         let mut expected = None;
 
         if let InnerNode::Int { value } = *nodes[0].inner {
@@ -182,6 +209,7 @@ mod test {
         }
 
         assert_eq!(expected, evaluated);
+        assert_eq!(evaluated_const, HashSet::new());
     }
 
 
@@ -191,6 +219,7 @@ mod test {
         let nodes = ast(&code).unwrap();
 
         let evaluated = evaluate_expr(nodes[0].clone(), code);
+        let evaluated_const = unique_constants_expr(evaluated.as_ref().unwrap(), code);
         let mut expected = None;
 
         if let InnerNode::Name { start, end } = *nodes[0].inner {
@@ -207,6 +236,7 @@ mod test {
         }
 
         assert_eq!(expected, evaluated);
+        assert_eq!(evaluated_const, HashSet::from(["first"]));
     }
     
 }

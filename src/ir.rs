@@ -155,7 +155,10 @@ fn gen_string_ir(code: &str, children: &Vec<Node>, scope: &mut HashSet<Box<str>>
     for n in children {
         gen_primitive_ir(code, n, scope, ops)?;
     }
-    ops.push(Op::Collapse);
+
+    if children.len() > 1 {
+        ops.push(Op::Collapse);
+    }
 
     Ok(())
 }
@@ -192,15 +195,21 @@ fn gen_expr_ir(code: &str, mut node: Node, scope: &mut HashSet<Box<str>>, ops: &
 pub fn gen_ir(code: &str, ast: Vec<Node>, opt: OptOptions) -> Result<Vec<Op>, CompileError> {
     let mut scope = HashSet::new();
     let mut ops = Vec::with_capacity(ast.len());
-    let mut iter = ast.into_iter();
+    let mut iter = ast.into_iter().peekable();
 
     while let Some(mut node) = iter.next() {
         match *node.inner {
             InnerNode::Literal => {
                 gen_primitive_ir(code, &node, &mut scope, &mut ops)?;
-                ops.push(Op::Flush);
+
+                // buffer must be flushed at the end of execution
+                if iter.peek().is_none() {
+                    ops.push(Op::Flush);
+                }
             },
             InnerNode::String { .. } | InnerNode::Int { .. } | InnerNode::Name { .. } => {
+
+                // optimize node if it is an expr
                 if opt.string_evaluation {
                     match evaluate_expr(node, code) {
                         Some(n) => node = n,
@@ -211,12 +220,27 @@ pub fn gen_ir(code: &str, ast: Vec<Node>, opt: OptOptions) -> Result<Vec<Op>, Co
                     }
                 }
 
+                // if node is an expr, previous ops should be flushed
+                if !ops.is_empty() && !node.children.is_empty() {
+                    ops.push(Op::Flush);
+                }
+
                 gen_expr_ir(code, node, &mut scope, &mut ops)?;
-                ops.push(Op::Flush);
+
+                // buffer must be flushed at the end of execution
+                if iter.peek().is_none() {
+                    ops.push(Op::Flush);
+                }
 
                 scope.clear();
             },
             InnerNode::Array { name, start, end } => {
+                // node is an array, so previous ops should be flushed
+                if !ops.is_empty() {
+                    ops.push(Op::Flush);
+                }
+
+                // optimize child node if it is an expr
                 let child = match opt.string_evaluation {
                     true => {
                         let node = evaluate_expr(node.children.pop().expect("Should be handled during syntax analysis"), code);
@@ -234,11 +258,13 @@ pub fn gen_ir(code: &str, ast: Vec<Node>, opt: OptOptions) -> Result<Vec<Op>, Co
                     }
                 };
 
+                // counter can contain any value, so we need to set it to left range arg
                 ops.push(Op::SetCounter { value: start.unwrap_or(0) });
+                // prepare state for current iteration
                 let op_index_begin = ops.len();
                 ops.push(Op::CmpArrayEmptyJmp{ op_index: 0, start, end, name: name.clone().into() });
                 ops.push(Op::LoadArrayItem { name: name.clone().into() });
-
+                // load constants
                 ops.push(Op::PutScopeVar { name: "_item_".into() });
                 scope.insert("_item_".into());
 
@@ -246,19 +272,25 @@ pub fn gen_ir(code: &str, ast: Vec<Node>, opt: OptOptions) -> Result<Vec<Op>, Co
                 ops.push(Op::PutScopeVar { name: "_index_".into() });
                 scope.insert("_index_".into());
 
+                // loop body
                 gen_expr_ir(code, child, &mut scope, &mut ops)?;
 
+                // prepare state for the next iteration
                 ops.push(Op::Flush);
                 ops.push(Op::DestroyScope);
                 scope.clear();
 
                 ops.push(Op::IncCounter);
 
+                // set op_index for loop begin
                 let op_index_end = ops.len();
                 if let Op::CmpArrayEmptyJmp { op_index, .. } = &mut ops[op_index_begin] {
                     *op_index = op_index_end;
+                } else {
+                    panic!("Expected CmpArrayEmptyJmp, found {:#?}", &ops[op_index_begin]);
                 }
 
+                // jmp
                 ops.push(Op::CmpCounterLessJmp { name: name, value: end, op_index: op_index_begin });
 
             },

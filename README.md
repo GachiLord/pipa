@@ -32,7 +32,7 @@
         `PutStr`  
         `Flush`    
 
-    * Elimination of unused PutScopeVar op
+    * ~Elimination of unused PutScopeVar op~
 
         Input:  
         `LoadArrayItem LIST`  

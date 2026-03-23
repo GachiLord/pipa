@@ -54,7 +54,8 @@
         `Flush`  
         `DestroyScope`
 
-1. Add `include` directive(maybe with some multi-threading)
+1. _Currently not planned_: add `include` directive(maybe with some multi-threading)  
+Requires rewrite of IR and AST generation and how vars are handled. Also functions should be introduced.
 1. CLI-interpreter
 1. Compiler
     * Add GNU assembler backend for x86-64 Linux, maybe arm64 and other Os'

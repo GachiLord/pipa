@@ -1,12 +1,7 @@
-// include the file to avoid multy-crate bullshit
-#![allow(unused)]
-include!("../utils.rs");
-
-use pipa::vm::Vm;
-use pipa::syntax::{Node, TokenType, ast};
-use pipa::ir::{Op, gen_ir, dump_ir};
+use pipa::syntax::{ast};
+use pipa::ir::{gen_ir};
 use pipa::analysis::NO_OPT;
-use std::fs::{exists, read_to_string, read_dir, write};
+use std::fs::{read_to_string};
 use std::io::stdout;
 use std::env;
 

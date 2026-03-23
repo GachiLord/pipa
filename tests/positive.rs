@@ -1,13 +1,11 @@
-mod utils;
-
 use std::io::{stdout, Write};
 use std::fs::{read_to_string, read_dir};
 use pipa::ir::gen_ir;
 use pipa::syntax::ast;
 use pipa::vm::Vm;
 use pipa::analysis::{NO_OPT, FULL_OPT};
+use pipa::utils::{VARS, ARRAYS};
 use std::env;
-use utils::{VARS, ARRAYS};
 
 
 fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {

@@ -1,11 +1,9 @@
-mod utils;
-
 use std::fs::{read_to_string};
 use pipa::ir::gen_ir;
 use pipa::syntax::{ast, TokenType};
 use pipa::error::{CompileError, ErrorReason};
 use pipa::analysis::{NO_OPT, FULL_OPT};
-use utils::err_reason;
+use pipa::utils::err_reason;
 
 fn test_str(code: &str) -> Result<(), CompileError> {
     let nodes = ast(code)?;

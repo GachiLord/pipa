@@ -1,7 +1,7 @@
 use std::sync::LazyLock;
 use std::collections::BTreeMap;
-use pipa::vm::{StringVars, ArrayVars};
-use pipa::error::{CompileError, ErrorReason};
+use crate::vm::{StringVars, ArrayVars};
+use crate::error::{CompileError, ErrorReason};
 
 
 pub static VARS: LazyLock<StringVars> = LazyLock::new(|| {

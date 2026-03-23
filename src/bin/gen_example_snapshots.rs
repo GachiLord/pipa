@@ -1,11 +1,8 @@
-// include the file to avoid multy-crate bullshit
-#![allow(unused)]
-include!("../utils.rs");
-
 use pipa::vm::Vm;
 use pipa::syntax::{Node, TokenType, ast};
 use pipa::ir::{Op, gen_ir, dump_ir};
 use pipa::analysis::NO_OPT;
+use pipa::utils::{VARS, ARRAYS};
 use std::fs::{exists, read_to_string, read_dir, write};
 use std::io::stdout;
 
@@ -13,7 +10,7 @@ use std::io::stdout;
 fn main() {
     let mut f = stdout().lock();
     
-    for path in read_dir("../examples").unwrap() {
+    for path in read_dir("examples").unwrap() {
 
         let pathb = path.unwrap().path();
         let path: &str = pathb.to_str().unwrap();

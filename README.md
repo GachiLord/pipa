@@ -3,7 +3,7 @@
 ## Todo
 
 1. ~Use proper AST~
-1. Add optimizations on AST and IR levels
+1. ~Add optimizations on AST and IR levels~
     * ~String evaluation~
 
         Input: `"$(_index_): $(_item_)" | "<li>$(_)</li>"`

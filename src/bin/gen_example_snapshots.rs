@@ -1,6 +1,6 @@
 use pipa::vm::Vm;
-use pipa::syntax::{Node, TokenType, ast};
-use pipa::ir::{Op, gen_ir, dump_ir};
+use pipa::syntax::ast;
+use pipa::ir::gen_ir;
 use pipa::analysis::NO_OPT;
 use pipa::utils::{VARS, ARRAYS};
 use std::fs::{exists, read_to_string, read_dir, write};

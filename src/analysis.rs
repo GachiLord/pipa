@@ -13,7 +13,6 @@ pub struct OptOptions {
 }
 
 pub fn unique_constants_expr<'a>(parent: &Node, code: &'a str) -> HashSet<&'a str> {
-    let mut tail = parent;
     let mut constants = HashSet::new();
 
     if let InnerNode::String { ref children } = *parent.inner {
@@ -117,9 +116,9 @@ pub fn evaluate_expr(parent: Node, code: &str) -> Option<Node> {
 }
 
 mod test {
-    use std::collections::HashSet;
-    use crate::syntax::{ast, InnerNode, Node};
-    use crate::analysis::{evaluate_expr, unique_constants_expr};
+    
+    
+    
 
     #[test]
     fn empty_string_evaluation() {

@@ -1,5 +1,22 @@
 # pipa
 
+Statically-typed compiled or interpreted programming language for writing templates.
+
+## IR
+
+* `PutStr` ( value ) – push value onto the stack  
+* `Flush` – output all values on the stack to the output buffer  
+* `Collapse` – concatenate all values on the stack into a single string  
+* `PutName` ( start, end, name ) – push a constant onto the stack using the provided range in the arguments  
+* `SetCounter` ( value ) – set counter to value  
+* `IncCounter` – increment counter  
+* `LoadCounter` – push counter onto the stack  
+* `CmpCounterLessJmp` ( op_index, value, name ) – if counter is less than value, or, in its absence, the length of the name array, then set pc to op_index  
+* `CmpArrayEmptyJmp` ( op_index, start, end, name ) – if the name array within the bounds start and end contains no elements, then set pc to op_index  
+* `LoadArrayItem` ( name ) – push the element of the name array at index counter onto the stack  
+* `PutScopeVar` ( name ) – remove the top element from the stack and assign its value to the scope variable name  
+* `DestroyScope` – remove all variables from the scope
+
 ## Optimizations
 
 * String evaluation

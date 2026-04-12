@@ -52,6 +52,38 @@
     `Flush`  
     `DestroyScope`
 
+## Library API
+
+```c
+// libpipa
+
+typedef Pipa_Constant struct {
+    const char *key
+    const char *value
+};
+
+typedef Pipa_Array struct {
+    const char *key
+    const char **values
+};
+
+typedef void* (*Pipa_AllocFunc) (void *ptr, void*);
+typedef void* (*Pipa_ReallocFunc) (void *ptr, size_t, void*);
+typedef void (*Pipa_FreeFunc) (void *, void*);
+typedef void (*Pipa_FlushCallback)(void*, void*);
+
+// compiler output
+
+int pipa_run(
+    const Pipa_Constant *constants,
+    const Pipa_Array *arrays,
+    Pipa_AllocFunc alloc_fn,
+    Pipa_ReallocFunc realloc_fn,
+    Pipa_FreeFunc free_fn,
+    Pipa_FlushCallback flush_cb,
+    void *user_data
+);
+```
 
 ## Todo
 

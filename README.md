@@ -73,6 +73,7 @@ lang="pipa" FILES=$(ls) pipa 'Hello from {{ lang }}. Heres your files: {{ "\n\n"
 Or embed it into your project
 ```rust
 use std::collections::BTreeMap;
+use std::io::stdout;
 use pipa::syntax::ast;
 use pipa::vm::Vm;
 use pipa::ir::gen_ir;
@@ -81,7 +82,7 @@ use pipa::vm::{ArrayVars, StringVars};
 
 
 fn main() {
-    let mut output = Vec::new();
+    let mut output = stdout().lock();
 
     // gen ir
     let code = r#"Hello from {{ lang }}. Heres your files: {{ "\n\n" FILES[:] | "* $(_item_)\n" }}"#;

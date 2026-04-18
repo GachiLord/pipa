@@ -58,6 +58,51 @@ The '(not)' part stands for OOM, OS or hardware issues. You're a not safe after 
 }}
 ```
 
+## Usage
+
+Try pipa in [Playground](https://gachilord.github.io/pipa-playground/)
+
+Use pipa as a standalone executable
+
+```bash
+cargo install
+# constants are mapped to environment vars
+lang="pipa" FILES=$(ls) pipa 'Hello from {{ lang }}. Heres your files: {{ "\n\n" FILES[:] | "* $(_item_)\n" }}'
+```
+
+Or embed it into your project
+```rust
+use std::collections::BTreeMap;
+use pipa::syntax::ast;
+use pipa::vm::Vm;
+use pipa::ir::gen_ir;
+use pipa::analysis::FULL_OPT;
+use pipa::vm::{ArrayVars, StringVars};
+
+
+fn main() {
+    let mut output = Vec::new();
+
+    // gen ir
+    let code = r#"Hello from {{ lang }}. Heres your files: {{ "\n\n" FILES[:] | "* $(_item_)\n" }}"#;
+
+    let nodes = ast(&code).unwrap();
+    let ir = gen_ir(&code, nodes, FULL_OPT).unwrap();
+
+    // define constants
+    let constants: StringVars = BTreeMap::from([
+        ("lang".into(), "pipa".into())
+    ]);
+    let arrays: ArrayVars = BTreeMap::from([
+        ("FILES".into(), vec!["one.txt".into(), "two.txt".into()])
+    ]);
+    
+    // run
+    let mut vm = Vm::new(constants, arrays);
+    vm.run(&mut output, &ir).unwrap();
+}
+```
+
 ## IR
 
 * `PutStr` ( value ) – push value onto the stack  

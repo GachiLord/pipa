@@ -3,8 +3,8 @@ use std::collections::BTreeMap;
 use std::io::Write;
 use crate::ir::{Op, is_name_reserved};
 
-pub type StringVars = BTreeMap<Box<str>, Box<str>>;
-pub type ArrayVars = BTreeMap<Box<str>, Vec<Box<str>>>;
+pub type StringVars = BTreeMap<String, String>;
+pub type ArrayVars = BTreeMap<String, Vec<String>>;
 
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -20,7 +20,7 @@ pub enum VmError {
 pub struct Vm<'a> {
     counter: usize,
     pc: usize,
-    stack: Vec<Box<str>>,
+    stack: Vec<String>,
     vars: &'a StringVars,
     arrays: &'a ArrayVars,
     scope: StringVars,
@@ -62,7 +62,7 @@ impl<'a> Vm<'a> {
     }
 
 
-    fn get_array_var(&self, name: &str) -> &[Box<str>] {
+    fn get_array_var(&self, name: &str) -> &[String] {
         match self.arrays.get(name) {
             Some(arr) => arr,
             None => &[],

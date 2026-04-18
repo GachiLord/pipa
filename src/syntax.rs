@@ -113,7 +113,7 @@ pub enum InnerNode {
         value: usize,
     },
     Array {
-        name: Box<str>,
+        name: String,
         start: Option<usize>,
         end: Option<usize>,
     },
@@ -523,7 +523,7 @@ fn parse_array(parent: Node, child: Token, code: &str) -> Result<Node, CompileEr
         end = Some(token.parse::<usize>().unwrap());
     }
 
-    let name: Box<str> = parent.as_str(code).into();
+    let name: String = parent.as_str(code).into();
     let n = match is_name_array(name.as_ref()) { 
         true => Node::new(parent.first_char, parent.end_char, InnerNode::Array { name, start, end }, vec![]),
         false => Node::new(parent.first_char, parent.end_char, InnerNode::Name { start, end }, vec![]),

@@ -8,14 +8,14 @@ use crate::analysis::{evaluate_expr, unique_constants_expr, OptOptions};
 #[derive(PartialEq, Debug, Clone)]
 pub enum Op {
     PutStr {
-        value: Box<str>,
+        value: String,
     },
     Flush,
     Collapse,
     PutName {
         start: Option<usize>,
         end: Option<usize>,
-        name: Box<str>,
+        name: String,
     },
     SetCounter {
         value: usize,
@@ -25,19 +25,19 @@ pub enum Op {
     CmpCounterLessJmp {
         op_index: usize,
         value: Option<usize>,
-        name: Box<str>,
+        name: String,
     },
     CmpArrayEmptyJmp {
         op_index: usize,
         start: Option<usize>,
         end: Option<usize>,
-        name: Box<str>,
+        name: String,
     },
     LoadArrayItem {
-        name: Box<str>,
+        name: String,
     },
     PutScopeVar {
-        name: Box<str>,
+        name: String,
     },
     DestroyScope,
 }
@@ -136,7 +136,7 @@ fn gen_primitive_ir(code: &str, node: &Node, scope: &mut HashSet<Box<str>>, ops:
             ops.push(Op::PutStr { value });
         },
         InnerNode::Name { start, end } => {
-            let name: Box<str> = node.as_str(code).into();
+            let name: String = node.as_str(code).into();
 
             in_scope(node.first_char, &name, scope)?;
 

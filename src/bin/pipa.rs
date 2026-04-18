@@ -49,7 +49,7 @@ fn main() {
     
     for (key, value) in env::vars() {
         if is_name_array(&key) {
-            let values: Vec<Box<str>> = value.split(&opt.separator).map(|v| v.into()).collect();
+            let values: Vec<String> = value.split(&opt.separator).map(|v| v.into()).collect();
 
             arrays.insert(key.into(), values);
             continue;

@@ -65,7 +65,7 @@ Try pipa in [Playground](https://gachilord.github.io/pipa-playground/)
 Use pipa as a standalone executable
 
 ```bash
-cargo install
+cargo install --path . --bin pipa
 # constants are mapped to environment vars
 lang="pipa" FILES=$(ls) pipa 'Hello from {{ lang }}. Heres your files: {{ "\n\n" FILES[:] | "* $(_item_)\n" }}'
 ```

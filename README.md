@@ -185,5 +185,5 @@ The language has some features that are difficult to implement in assembly, QBE 
     Again, I tried to solve this by creating sort of `runtime` for the language similiar to dart, but it turned out that most of the actual code to be run was located in `runtime`(the QBE prototype was calling functions and updating counter LOL) which is not what I wanted to accomplish.
 
 
-1. Stabilize API
+1. ~Stabilize API~
 

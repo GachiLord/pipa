@@ -9,7 +9,6 @@ pub const FULL_OPT: OptOptions = OptOptions{ string_evaluation: true, constant_e
 pub struct OptOptions {
     pub string_evaluation: bool,
     pub constant_evaluation: bool,
-    // TODO Deadcode elimination
 }
 
 pub fn unique_constants_expr<'a>(parent: &Node, code: &'a str) -> HashSet<&'a str> {
@@ -116,7 +115,9 @@ pub fn evaluate_expr(parent: Node, code: &str) -> Option<Node> {
 }
 
 mod test {
-    
+    use std::collections::HashSet;
+    use crate::analysis::{Node, unique_constants_expr, InnerNode, evaluate_expr};
+    use crate::syntax::ast;
     
     
 

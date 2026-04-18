@@ -98,7 +98,7 @@ fn main() {
     ]);
     
     // run
-    let mut vm = Vm::new(constants, arrays);
+    let mut vm = Vm::new(&constants, &arrays);
     vm.run(&mut output, &ir).unwrap();
 }
 ```

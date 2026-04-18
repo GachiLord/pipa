@@ -31,7 +31,7 @@ fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {
     }
     
     let mut out = Vec::new();
-    let mut vm = Vm::new(VARS.clone(), ARRAYS.clone());
+    let mut vm = Vm::new(&VARS, &ARRAYS);
 
     match vm.run(&mut out, &ir) {
         Ok(_) => {},
@@ -54,7 +54,7 @@ fn test_str(f: &mut impl Write, filename: &str, code: &str, output: &str) {
 
     
     let mut out = Vec::new();
-    let mut vm = Vm::new(VARS.clone(), ARRAYS.clone());
+    let mut vm = Vm::new(&VARS, &ARRAYS);
 
     match vm.run(&mut out, &ir_opt) {
         Ok(_) => {},

@@ -17,17 +17,17 @@ pub enum VmError {
 }
 
 #[derive(Debug)]
-pub struct Vm {
+pub struct Vm<'a> {
     counter: usize,
     pc: usize,
     stack: Vec<Box<str>>,
-    vars: StringVars,
+    vars: &'a StringVars,
+    arrays: &'a ArrayVars,
     scope: StringVars,
-    arrays: ArrayVars,
 }
 
-impl Vm {
-    pub fn new(vars: StringVars, arrays: ArrayVars) -> Self {
+impl<'a> Vm<'a> {
+    pub fn new(vars: &'a StringVars, arrays: &'a ArrayVars) -> Vm<'a> {
         Self {
             counter: 0,
             pc: 0,

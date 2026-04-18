@@ -46,7 +46,7 @@ fn main() {
 
         
         let mut out = Vec::new();
-        let mut vm = Vm::new(VARS.clone(), ARRAYS.clone());
+        let mut vm = Vm::new(&VARS, &ARRAYS);
 
         match vm.run(&mut out, &ir) {
             Ok(_) => {},

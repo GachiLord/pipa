@@ -59,7 +59,7 @@ fn main() {
     }
 
     // run
-    let mut vm = Vm::new(constants, arrays);
+    let mut vm = Vm::new(&constants, &arrays);
 
     match vm.run(&mut f, &ir) {
         Ok(_) => {},
